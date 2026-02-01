@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>4班ローテ三交代（ダイヤル式）</title>
+<style>
+  :root{
+    --bg:#0b1220; --panel:#0f172a; --card:#111827; --text:#e5e7eb; --muted:#94a3b8;
+    --accent:#60a5fa; --accent-weak:#3b82f6; --today:#f59e0b; --off:#fda4af;
+  }
+  html,body{height:100%;margin:0;background:var(--bg);color:var(--text);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans JP","Hiragino Kaku Gothic ProN",Meiryo,sans-serif}
+  .app{height:100%;display:grid;grid-template-columns:320px 1fr;gap:16px;padding:16px;}
+  @media (max-width:900px){ .app{ grid-template-columns:1fr; grid-template-rows:280px 1fr; } }
+
+  /* 左：日付ダイヤル */
+  .dial{background:var(--panel);border-radius:12px;display:flex;flex-direction:column;overflow:hidden;}
+  .dial-header{padding:12px 12px 0;display:flex;gap:8px;align-items:center;}
+  .dial-header .title{font-weight:700;}
+  .dial-wheel{position:relative;margin:12px;border-radius:12px;background:linear-gradient(180deg,rgba(96,165,250,.12),rgba(96,165,250,.04));
+    border:1px solid #1f2a44;height:100%;min-height:220px;overflow:auto;scroll-snap-type:y mandatory;}
+  .date-item{display:grid;grid-template-columns:90px 1fr;gap:8px;align-items:center;padding:14px 12px;border-bottom:1px solid #1f2a44;scroll-snap-align:start;background:transparent;}
+  .date-item:hover{background:rgba(148,163,184,0.06)}
+  .date-col{display:flex;flex-direction:column}
+  .dow{font-size:12px;color:var(--muted)}
+  .ymd{font-weight:700;letter-spacing:.3px}
+  .today{outline:2px solid var(--today);outline-offset:-2px;background:rgba(245,158,11,.08)}
+  .tag{font-size:12px;padding:2px 6px;border-radius:999px;border:1px solid #334155;color:var(--muted);width:max-content}
+
+  /* 右：シフト表示 */
+  .panel{background:var(--panel);border-radius:12px;display:grid;grid-template-rows:auto 1fr;overflow:hidden;}
+  .panel-header{padding:12px;display:flex;gap:10px;align-items:center;border-bottom:1px solid #1f2a44;}
+  .sel-date{font-weight:700}
+  .legend{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+  .chip{font-size:12px;padding:2px 8px;border-radius:999px;border:1px solid #334155;color:var(--muted)}
+  .chip.off{color:var(--off);border-color:var(--off)}
+  .grid{padding:16px;display:grid;grid-template-columns:repeat(2,minmax(220px,1fr));gap:12px;}
+  @media (max-width:900px){ .grid{grid-template-columns:1fr} }
+  .card{background:var(--card);border:1px solid #243449;border-radius:12px;padding:14px;}
+  .card h3{margin:0 0 10px;font-size:16px}
+  .row{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px dashed #334155;}
+  .row:first-of-type{border-top:none}
+  .label{color:var(--muted)}
+  .shift{font-weight:700;color:var(--accent)}
+  .offbox{background:rgba(253,164,175,.1);border:1px dashed var(--off);padding:8px;border-radius:8px}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- 左：日付ダイヤル -->
+  <section class="dial" aria-label="日付ダイヤル">
+    <div class="dial-header"><div class="title">日付</div></div>
+    <div id="dialWheel" class="dial-wheel" tabindex="0" aria-label="スクロールで日付を選択"></div>
+  </section>
+
+  <!-- 右：シフト表示 -->
+  <section class="panel" aria-label="シフト詳細">
+    <div class="panel-header">
+      <div class="sel-date" id="selDateText">—</div>
+      <div class="legend">
+        <span class="chip">1番 08:00–16:00</span>
+        <span class="chip">2番 16:00–23:00</span>
+        <span class="chip">3番 23:00–08:00</span>
+        <span class="chip off">休</span>
+      </div>
+    </div>
+    <div class="grid" id="grid"></div>
+  </section>
+</div>
+
+<script>
+/** ====== 勤務パターン設定（固定） ====== */
+const teams = ["A","B","C","D"];   // 4班
+const slots = [
+  { name:"1番", time:"08:00–16:00" },
+  { name:"2番", time:"16:00–23:00" },
+  { name:"3番", time:"23:00–08:00" },
+  { name:"休",  time:"—" }
+];
+
+/**
+ * 基準日の並び（day0）を “今日” の実績に合わせる
+ * 2026-02-02 のCSVでは 1番=B, 2番=A, 3番=D, 休=C → [B,A,D,C] を day0 とする
+ * 以後は 1日ごとに配列をローテーション（無限繰り返し）
+ * ref: shift_2026_2035.csv
+ */
+const baseDate = new Date(); baseDate.setHours(0,0,0,0);
+const baseKey = (d)=> d.toISOString().slice(0,10);
+
+// 今日のキー（例: 2026-02-02）
+const today = new Date(); today.setHours(0,0,0,0);
+
+// ★ CSVの“今日”の実績並び（1番→2番→3番→休）
+const day0Order = ["B","A","D","C"]; // 2026-02-02 実績に合わせる（1番=B,2番=A,3番=D,休=C）
+
+/** ユーティリティ */
+const dow = ["日","月","火","水","木","金","土"];
+const addDays = (d,n)=>{ const x=new Date(d); x.setDate(x.getDate()+n); return x; };
+const diffDays = (a,b)=> Math.floor((a-b)/(1000*60*60*24));
+const fmtYmd = (d)=> `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${dow[d.getDay()]}）`;
+
+/** 指定日の担当（スロット×班）を計算：day0Order を days 差分ぶんローテ */
+function assignmentFor(date){
+  const days = diffDays(date, today); // today を day0 として扱う
+  // 正のときは右回り、負のときは左回りの循環
+  const order = day0Order.map((_,i)=> day0Order[(i - (days % day0Order.length) + day0Order.length) % day0Order.length]);
+
+  // slots[0..3] に order[0..3] を対応付け
+  return slots.map((slot, idx)=> ({ slot:slot.name, time:slot.time, team:order[idx] }));
+}
+
+/** 画面描画 */
+const dialWheel = document.getElementById('dialWheel');
+const grid = document.getElementById('grid');
+const selDateText = document.getElementById('selDateText');
+
+function renderDialAround(centerDate){
+  dialWheel.innerHTML = "";
+  // 無限スクロールの代わりに、表示範囲を広く用意（前後 3650 日＝約10年）
+  const span = 3650;
+  for(let i=-span;i<=span;i++){
+    const d = addDays(centerDate, i);
+    const item = document.createElement('button');
+    item.className = 'date-item' + (d.getTime()===today.getTime() ? ' today' : '');
+    item.setAttribute('data-date', d.toISOString().slice(0,10));
+    item.innerHTML = `
+      <div class="date-col">
+        <span class="dow">${dow[d.getDay()]}</span>
+        <span class="ymd">${d.getMonth()+1}/${d.getDate()}</span>
+      </div>
+      <span class="tag">${d.getFullYear()}</span>
+    `;
+    item.addEventListener('click', ()=> selectDate(d));
+    dialWheel.appendChild(item);
+  }
+}
+
+function renderRight(date){
+  selDateText.textContent = fmtYmd(date);
+  const data = assignmentFor(date);
+
+  grid.innerHTML = "";
+
+  // シフト3枚＋休1枚のカード
+  data.slice(0,3).forEach(({slot,time,team})=>{
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <h3>${slot}</h3>
+      <div class="row"><div class="label">班</div><div class="shift">${team}</div></div>
+      <div class="row"><div class="label">時刻</div><div>${time}</div></div>
+    `;
+    grid.appendChild(card);
+  });
+
+  const offTeam = data[3].team;
+  const offCard = document.createElement('div');
+  offCard.className = 'card';
+  offCard.innerHTML = `
+    <h3>休</h3>
+    <div class="offbox">
+      <div style="display:flex;justify-content:space-between">
+        <div class="label">班</div><div style="font-weight:700;color:var(--off)">${offTeam}</div>
+      </div>
+    </div>
+  `;
+  grid.appendChild(offCard);
+}
+
+function selectDate(d){
+  renderRight(d);
+  [...dialWheel.children].forEach(el => {
+    el.classList.toggle('selected', el.getAttribute('data-date')===d.toISOString().slice(0,10));
+  });
+}
+
+function init(){
+  renderDialAround(today);
+  selectDate(today);
+  // “今日”を中央にスクロール
+  const el = [...dialWheel.children].find(x=>x.classList.contains('today'));
+  if(el){ el.scrollIntoView({block:'center'}); }
+
+  // ホイールっぽい操作感：ホイール末尾/先頭に来たら自動で補充（実用上は前後10年で十分）
+  dialWheel.addEventListener('scroll', ()=>{
+    const nearTop = dialWheel.scrollTop < 60;
+    const nearBottom = dialWheel.scrollHeight - dialWheel.scrollTop - dialWheel.clientHeight < 60;
+    if(nearTop || nearBottom){
+      // 先頭/末尾で“今日”へ戻すボンヤリ挙動（無限感の演出）
+      const elToday = [...dialWheel.children].find(x=>x.classList.contains('today'));
+      if(elToday){ elToday.scrollIntoView({block:'center'}); }
+    }
+  });
+}
+
+init();
+</script>
+</body>
+</html>
