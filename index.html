@@ -3,11 +3,16 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>4班・3勤1休ローテ（三交代・上下レイアウト）</title>
+<title>4班・3勤1休ローテ（三交代・上下レイアウト／一段表示）</title>
 <style>
   :root{
     --bg:#0b1220; --panel:#0f172a; --card:#111827; --text:#e5e7eb; --muted:#94a3b8;
     --accent:#60a5fa; --accent-weak:#3b82f6; --today:#f59e0b; --off:#fda4af;
+    /* 班ごとのテーマカラー（必要ならお好みで変更OK） */
+    --A:#22d3ee; /* シアン */
+    --B:#a78bfa; /* パープル */
+    --C:#34d399; /* グリーン */
+    --D:#fbbf24; /* アンバー */
   }
   html,body{height:100%;margin:0;background:var(--bg);color:var(--text);
     font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans JP","Hiragino Kaku Gothic ProN",Meiryo,sans-serif}
@@ -16,7 +21,7 @@
 
   /* 上：日付ダイヤル（横スクロール） */
   .dial-header{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:10px;border-bottom:1px solid #1f2a44;background:#0c1528;}
-  .title{font-weight:700}
+  .title{font-weight:800;font-size:18px;letter-spacing:.3px}
   .controls{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
   .btn{background:#0b1220;color:var(--text);border:1px solid #334155;border-radius:10px;padding:6px 10px;cursor:pointer}
   .btn:hover{border-color:var(--accent-weak);color:var(--accent)}
@@ -27,23 +32,51 @@
   .date-item{scroll-snap-align:center;display:grid;gap:6px;align-content:center;justify-items:center;
     padding:12px;border-radius:10px;background:#0e1730;border:1px solid #1f2a44;min-height:84px;cursor:pointer}
   .date-item:hover{border-color:#33507a}
-  .ymd{font-weight:700;letter-spacing:.2px}
+  .ymd{font-weight:800;letter-spacing:.2px;font-size:16px}
   .dow{font-size:12px;color:var(--muted)}
   .tag{font-size:11px;color:var(--muted)}
   .today{outline:2px solid var(--today);outline-offset:-2px;background:rgba(245,158,11,.08)}
   .selected{border-color:var(--accent-weak);box-shadow:0 0 0 1px var(--accent-weak) inset}
 
-  /* 下：当日の班割 */
-  .grid{padding:14px;display:grid;grid-template-columns:repeat(2,minmax(240px,1fr));gap:12px}
-  @media (max-width:720px){ .grid{grid-template-columns:1fr} }
-  .card{background:var(--card);border:1px solid #243449;border-radius:12px;padding:14px}
-  .card h3{margin:0 0 8px;font-size:16px}
-  .row{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px dashed #334155}
+  /* 下：当日の班割（一段・横スクロール） */
+  .grid{
+    display:grid;
+    grid-auto-flow: column;               /* ← 横方向に並べる（常に1段） */
+    grid-auto-columns: minmax(260px, 1fr);/* ← 各カードの最小幅 */
+    gap:12px;
+    padding:14px;
+    overflow-x:auto;                      /* ← 横スクロール許可 */
+  }
+  .card{background:var(--card);border:1px solid #243449;border-radius:12px;padding:14px;min-height:148px}
+  .card h3{
+    margin:0 0 10px;
+    font-size:20px;           /* ← 番（見出し）を大きく */
+    font-weight:900;
+    letter-spacing:.5px;
+  }
+  .row{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px dashed #334155}
   .row:first-of-type{border-top:none}
-  .label{color:var(--muted)}
-  .value{font-weight:700;color:var(--accent)}
+  .label{color:var(--muted);font-size:14px}
+  .value{
+    font-weight:900;          /* ← 班を太字で強調 */
+    font-size:22px;           /* ← 班のフォントサイズUP */
+    letter-spacing:.5px;
+  }
+  /* 休カードの中身 */
   .offbox{background:rgba(253,164,175,.1);border:1px dashed var(--off);padding:10px;border-radius:10px}
   .footer{padding:10px;border-top:1px solid #1f2a44;color:var(--muted);font-size:12px}
+
+  /* 班ごとの色クラス（文字＆アクセント） */
+  .team-A .value{ color: var(--A); }
+  .team-B .value{ color: var(--B); }
+  .team-C .value{ color: var(--C); }
+  .team-D .value{ color: var(--D); }
+
+  /* 見出し（番）の飾り線にも班色のニュアンスを少し足す */
+  .team-A h3{ border-left:4px solid var(--A); padding-left:10px; }
+  .team-B h3{ border-left:4px solid var(--B); padding-left:10px; }
+  .team-C h3{ border-left:4px solid var(--C); padding-left:10px; }
+  .team-D h3{ border-left:4px solid var(--D); padding-left:10px; }
 </style>
 </head>
 <body>
@@ -65,7 +98,7 @@
       <div id="dialWheel" class="dial-wheel" tabindex="0" aria-label="横にスクロールして日付を選択"></div>
     </section>
 
-    <!-- 下：当日の班割 -->
+    <!-- 下：当日の班割（1段） -->
     <section class="panel" aria-label="シフト詳細">
       <div class="dial-header" style="justify-content:space-between">
         <div id="selDateText" class="title">—</div>
@@ -78,39 +111,29 @@
       </div>
       <div class="grid" id="grid"></div>
       <div class="footer">
-        ※ 各班は <b>3勤1休</b> で <b>1→休→3→休→2→休</b> を 12日周期でくり返します。<br/>
-        ※ 基準は 2026-02-02 の実績（1番=B, 2番=A, 3番=D, 休=C）に揃え済み。[1](https://ubeglobal-my.sharepoint.com/personal/32607u_ube_com/_layouts/15/Doc.aspx?sourcedoc=%7B5583F174-C593-41F5-8351-0688521D8C40%7D&file=shift_2026_2035.csv&action=default&mobileredirect=true)
+        ※ 各班は <b>3勤1休</b>（Aの例：1,1,1,休,3,3,3,休,2,2,2,休）。<br/>
+        ※ 基準は 2026-02-02 の実績（1番=B, 2番=A, 3番=D, 休=C）。必要なら「今日基準」にも変更可。
       </div>
     </section>
   </main>
 
 <script>
-/** ====== 勤務パターン：3勤1休 × ローテ ======
- * 1,1,1,休,3,3,3,休,2,2,2,休 → 12日周期
- * これを各班ごとに位相シフト（δ）して、毎日「1・2・3・休」が必ず一つずつになるよう整列。
- */
-const CYCLE = ["1","1","1","休","3","3","3","休","2","2","2","休"]; // 12ステップ
+/** ====== 3勤1休ローテ（12日周期） ====== */
+const CYCLE = ["1","1","1","休","3","3","3","休","2","2","2","休"];
 const PERIOD = CYCLE.length;
 
-/** 班と位相の対応（δ）：
- * day0（基準日）で 1番=B, 2番=A, 3番=D, 休=C になるように
- * δ を {0,3,6,9}（3刻み）に割当。
- *   δ=0  → day0は "1"
- *   δ=3  → day0は "休"
- *   δ=6  → day0は "3"
- *   δ=9  → day0は "2"
- * よって [B,C,D,A] に [0,3,6,9] を割当。
- */
-const TEAMS = ["A","B","C","D"]; // 表示順のため
+/** day0 で 1番=B, 2番=A, 3番=D, 休=C を満たす位相（δ=0,3,6,9） */
 const PHASE = { A:9, B:0, C:3, D:6 };
 
-/** スロット名称と時刻 */
+/** スロット（番） */
 const SLOTS = {
   "1": { name:"1番", time:"08:00–16:00" },
   "2": { name:"2番", time:"16:00–23:00" },
   "3": { name:"3番", time:"23:00–08:00" },
   "休": { name:"休",  time:"—" }
 };
+
+const TEAM_CLASS = { A:"team-A", B:"team-B", C:"team-C", D:"team-D" };
 
 /** ====== 日付ユーティリティ ====== */
 const dow = ["日","月","火","水","木","金","土"];
@@ -119,28 +142,25 @@ const diffDays = (a,b)=> Math.floor((a-b)/(1000*60*60*24));
 const toISO = (d)=> { const z=new Date(d); z.setHours(0,0,0,0); return z.toISOString().slice(0,10); };
 const fmtYmd = (d)=> `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${dow[d.getDay()]}）`;
 
-/** ====== 基準日の設定 ======
- * CSVの実績に合わせて 2026-02-02 を day0 に取る。
- * 「今日を基準にしたい」場合は下の DAY0_DATE を new Date() に変えてOK。
+/** ====== 基準日 ======
+ * CSV 実績に合わせて 2026-02-02 を day0（必要なら new Date() に変更可）
  */
-const DAY0_DATE = new Date("2026-02-02T00:00:00"); // ←必要なら new Date() に
+const DAY0_DATE = new Date("2026-02-02T00:00:00");
 const TODAY = new Date(); TODAY.setHours(0,0,0,0);
 
-/** 指定日の「各班が何を担当か」を返す（key: slot → value: team） */
+/** 指定日のスロット→班（毎日「1・2・3・休」が一つずつ） */
 function assignmentFor(date){
   const n = ((diffDays(date, DAY0_DATE) % PERIOD) + PERIOD) % PERIOD;
-  // 各班のその日の記号（"1"|"2"|"3"|"休"）を出す
   const symbolOfTeam = {};
   Object.keys(PHASE).forEach(team=>{
     const idx = (n + PHASE[team]) % PERIOD;
     symbolOfTeam[team] = CYCLE[idx];
   });
-  // スロット→班（列）に反転。毎日ちょうど1つずつになる構成（δ=0,3,6,9）。
   const result = { "1":null, "2":null, "3":null, "休":null };
   Object.entries(symbolOfTeam).forEach(([team, sym])=>{
     result[sym] = team;
   });
-  return result;
+  return result; // {"1":"A|B|C|D", "2":..., "3":..., "休":...}
 }
 
 /** ====== 画面要素 ====== */
@@ -152,7 +172,7 @@ const nextWeekBtn = document.getElementById('nextWeek');
 const todayBtn    = document.getElementById('todayBtn');
 const gotoDateInp = document.getElementById('gotoDate');
 
-/** ダイヤル描画（前後各 10年ぶん） */
+/** ダイヤル描画（前後各10年） */
 function renderDialAround(centerDate){
   dialWheel.innerHTML = "";
   const span = 3650;
@@ -171,27 +191,32 @@ function renderDialAround(centerDate){
   }
 }
 
-/** 下のカード描画：スロット→班 */
+/** 下のカード描画（常に横一列） */
 function renderRight(date){
   selDateText.textContent = fmtYmd(date);
   const map = assignmentFor(date); // {"1":team, "2":team, "3":team, "休":team}
 
   grid.innerHTML = "";
 
-  // 1番・2番・3番
-  ["1","2","3"].forEach(sym=>{
+  // カード生成ユーティリティ（班色クラスを付与）
+  const makeCard = (sym)=>{
     const team = map[sym];
     const card = document.createElement('div');
-    card.className = 'card';
+    card.className = `card ${TEAM_CLASS[team] || ""}`;
     card.innerHTML = `
       <h3>${SLOTS[sym].name}</h3>
       <div class="row"><div class="label">班</div><div class="value">${team}</div></div>
       <div class="row"><div class="label">時刻</div><div>${SLOTS[sym].time}</div></div>
     `;
-    grid.appendChild(card);
-  });
+    return card;
+  };
 
-  // 休
+  // 横一列：1番 → 2番 → 3番 → 休
+  grid.appendChild(makeCard("1"));
+  grid.appendChild(makeCard("2"));
+  grid.appendChild(makeCard("3"));
+
+  // 休は色クラスは付けず、休専用のスタイルを使用
   const offTeam = map["休"];
   const offCard = document.createElement('div');
   offCard.className = 'card';
@@ -200,7 +225,7 @@ function renderRight(date){
     <div class="offbox">
       <div style="display:flex;justify-content:space-between;align-items:center">
         <div class="label">班</div>
-        <div style="font-weight:700;color:var(--off)">${offTeam}</div>
+        <div style="font-weight:900;color:var(--off);font-size:22px;letter-spacing:.5px">${offTeam}</div>
       </div>
     </div>
   `;
@@ -227,7 +252,7 @@ function init(){
   renderDialAround(TODAY);
   selectDate(TODAY, {scrollIntoView:true});
 
-  // ナビげーしょん
+  // ナビ
   prevWeekBtn.addEventListener('click', ()=>{
     const current = new Date(gotoDateInp.value || TODAY);
     const d = addDays(current, -7);
