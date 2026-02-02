@@ -158,4 +158,103 @@ function renderDialAround(centerDate){
   const span = 3650;
   for(let i=-span;i<=span;i++){
     const d = addDays(centerDate, i);
+    const b = document.createElement('button');
+    b.className = 'date-item' + (toISO(d)===toISO(TODAY) ? ' today' : '');
+    b.setAttribute('data-date', toISO(d));
+    b.innerHTML = `
+      <div class="ymd">${d.getMonth()+1}/${d.getDate()}</div>
+      <div class="dow">${dow[d.getDay()]}</div>
+      <div class="tag">${d.getFullYear()}</div>
+    `;
+    b.addEventListener('click', ()=> selectDate(d, {scrollIntoView:true}));
+    dialWheel.appendChild(b);
+  }
+}
+
+/** 下のカード描画：スロット→班 */
+function renderRight(date){
+  selDateText.textContent = fmtYmd(date);
+  const map = assignmentFor(date); // {"1":team, "2":team, "3":team, "休":team}
+
+  grid.innerHTML = "";
+
+  // 1番・2番・3番
+  ["1","2","3"].forEach(sym=>{
+    const team = map[sym];
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <h3>${SLOTS[sym].name}</h3>
+      <div class="row"><div class="label">班</div><div class="value">${team}</div></div>
+      <div class="row"><div class="label">時刻</div><div>${SLOTS[sym].time}</div></div>
+    `;
+    grid.appendChild(card);
+  });
+
+  // 休
+  const offTeam = map["休"];
+  const offCard = document.createElement('div');
+  offCard.className = 'card';
+  offCard.innerHTML = `
+    <h3>休</h3>
+    <div class="offbox">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div class="label">班</div>
+        <div style="font-weight:700;color:var(--off)">${offTeam}</div>
+      </div>
+    </div>
+  `;
+  grid.appendChild(offCard);
+}
+
+/** 選択処理（ダイヤル＆dateピッカーから呼ぶ） */
+function selectDate(d, opts={}){
+  renderRight(d);
+  // ダイヤルの選択表示
+  [...dialWheel.children].forEach(el => {
+    el.classList.toggle('selected', el.getAttribute('data-date')===toISO(d));
+  });
+  // date ピッカー同期
+  gotoDateInp.value = toISO(d);
+  if(opts.scrollIntoView){
+    const el = [...dialWheel.children].find(x=>x.getAttribute('data-date')===toISO(d));
+    if(el){ el.scrollIntoView({inline:'center', block:'nearest', behavior:'smooth'}); }
+  }
+}
+
+/** 初期化 */
+function init(){
+  renderDialAround(TODAY);
+  selectDate(TODAY, {scrollIntoView:true});
+
+  // ナビげーしょん
+  prevWeekBtn.addEventListener('click', ()=>{
+    const current = new Date(gotoDateInp.value || TODAY);
+    const d = addDays(current, -7);
+    selectDate(d, {scrollIntoView:true});
+  });
+  nextWeekBtn.addEventListener('click', ()=>{
+    const current = new Date(gotoDateInp.value || TODAY);
+    const d = addDays(current, 7);
+    selectDate(d, {scrollIntoView:true});
+  });
+  todayBtn.addEventListener('click', ()=>{
+    selectDate(TODAY, {scrollIntoView:true});
+  });
+  // 日付指定
+  gotoDateInp.addEventListener('change', ()=>{
+    const v = gotoDateInp.value;
+    if(!v) return;
+    const d = new Date(v);
+    d.setHours(0,0,0,0);
+    selectDate(d, {scrollIntoView:true});
+  });
+}
+
+init();
+</script>
+</body>
+</html>
+
+
 
