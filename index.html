@@ -3,223 +3,229 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>4班・3勤1休ローテ（三交代・上下レイアウト／一段表示）</title>
+<title>4班・3勤1休ローテ（三交代・上下レイアウト／モダンUI）</title>
 <style>
   :root{
-    --bg:#0b1220; --panel:#0f172a; --card:#111827; --text:#e5e7eb; --muted:#94a3b8;
-    --accent:#60a5fa; --accent-weak:#3b82f6; --today:#f59e0b; --off:#fda4af;
+    /* ベース色 */
+    --bg:#0a0f1c; --panel:#0c1528; --card:rgba(18,26,44,0.6);
+    --text:#f1f5f9; --muted:#94a3b8; --surface:#0e1830;
+    --today:#f59e0b; --off:#fda4af; --border:#1f2a44;
 
-    /* 班カラー（ビビッド：班名の強調に使用） */
-    --A:#22d3ee;  /* A: シアン */
-    --B:#a78bfa;  /* B: パープル */
-    --C:#34d399;  /* C: グリーン */
-    --D:#fbbf24;  /* D: アンバー */
+    /* 班カラー（強調用・ビビッド） */
+    --A:#22d3ee;  /* シアン */
+    --B:#a78bfa;  /* パープル */
+    --C:#34d399;  /* グリーン */
+    --D:#fbbf24;  /* アンバー */
 
-    /* スロット（番）カラー：淡色（番の見出し左線だけに使用） */
-    --S1:#3b82f6; /* 1番: ブルー系（淡） */
-    --S2:#10b981; /* 2番: グリーン系（淡） */
-    --S3:#f59e0b; /* 3番: オレンジ系（淡） */
-    --Sx:#fda4af; /* 休:   ピンク系（淡） */
+    /* ガラス感のブラー */
+    --blur: 12px;
+    /* 立体影 */
+    --elev: 0 10px 25px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.04);
+    /* カード枠の微妙な光り */
+    --glow: 0 0 0 1px rgba(148,163,184,.08);
   }
-  html,body{height:100%;margin:0;background:var(--bg);color:var(--text);
-    font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans JP","Hiragino Kaku Gothic ProN",Meiryo,sans-serif}
-  .app{min-height:100vh;display:grid;grid-template-rows:auto 1fr;gap:12px;padding:12px;}
-  .panel{background:var(--panel);border:1px solid #1f2a44;border-radius:12px;overflow:hidden}
 
-  /* 上：日付ダイヤル（横スクロール） */
-  .dial-header{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:10px;border-bottom:1px solid #1f2a44;background:#0c1528;}
-  .title{font-weight:800;font-size:18px;letter-spacing:.3px}
+  /* 背景に奥行き（グラデ＋ノイズ） */
+  html,body{height:100%;margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans JP","Hiragino Kaku Gothic ProN",Meiryo,sans-serif;
+    color:var(--text); background:radial-gradient(1200px 800px at 10% -10%, #1e293b 0%, #0a0f1c 50%), radial-gradient(1200px 800px at 110% 110%, #0b3a5b 0%, #0a0f1c 50%);}
+  body:after{
+    content:""; position:fixed; inset:0; pointer-events:none;
+    background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" fill="none"><path d="M40 0v80M0 40h80" stroke="rgba(255,255,255,0.02)" stroke-width="1"/></svg>');
+    background-size:80px 80px; mix-blend-mode:overlay; opacity:.8;
+  }
+
+  .app{min-height:100vh;display:grid;grid-template-rows:auto 1fr;gap:14px;padding:16px;}
+  .panel{
+    background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+    border:1px solid var(--border); border-radius:16px; overflow:hidden; backdrop-filter:blur(10px);
+    box-shadow:var(--glow), var(--elev);
+  }
+
+  /* ヘッダー（上段・下段共通） */
+  .hdr{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:12px 14px;border-bottom:1px solid var(--border);background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,0));}
+  .title{font-weight:900;font-size:18px;letter-spacing:.3px}
+
+  /* ボタン/入力 */
   .controls{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
-  .btn{background:#0b1220;color:var(--text);border:1px solid #334155;border-radius:10px;padding:6px 10px;cursor:pointer}
-  .btn:hover{border-color:var(--accent-weak);color:var(--accent)}
-  input[type="date"]{background:#0b1220;color:var(--text);border:1px solid #334155;border-radius:10px;padding:6px 10px}
+  .btn,.chip,input[type="date"]{
+    background:var(--surface); color:var(--text); border:1px solid #334155; border-radius:12px; padding:8px 12px; font-weight:600;
+  }
+  .btn:hover{border-color:#3b82f6; color:#93c5fd}
+  input[type="date"]{padding:7px 12px;}
 
-  .dial-wheel{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(120px,1fr);
-    gap:10px;overflow:auto;padding:12px;scroll-snap-type:x mandatory}
-  .date-item{scroll-snap-align:center;display:grid;gap:6px;align-content:center;justify-items:center;
-    padding:12px;border-radius:10px;background:#0e1730;border:1px solid #1f2a44;min-height:84px;cursor:pointer}
-  .date-item:hover{border-color:#33507a}
-  .ymd{font-weight:800;letter-spacing:.2px;font-size:16px}
-  .dow{font-size:12px;color:var(--muted)}
-  .tag{font-size:11px;color:var(--muted)}
-  .today{outline:2px solid var(--today);outline-offset:-2px;background:rgba(245,158,11,.08)}
-  .selected{border-color:var(--accent-weak);box-shadow:0 0 0 1px var(--accent-weak) inset}
+  /* 上：横ダイヤル */
+  .wheel{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(120px,1fr);gap:12px;overflow:auto;padding:14px;scroll-snap-type:x mandatory}
+  .day{
+    scroll-snap-align:center; display:grid; gap:6px; place-items:center; padding:14px 10px;
+    border:1px solid var(--border); border-radius:14px; background:var(--card);
+    backdrop-filter:blur(var(--blur)); box-shadow:var(--glow);
+    min-height:92px; cursor:pointer; transition:transform .12s ease, border-color .15s ease, background-color .15s ease;
+  }
+  .day:hover{ transform:translateY(-2px); border-color:#375079; }
+  .ymd{font-weight:900; letter-spacing:.2px; font-size:16px}
+  .dow{font-size:12px; color:var(--muted)}
+  .tag{font-size:11px; color:var(--muted)}
+  .today{ outline:2px solid var(--today); outline-offset:-2px; background:linear-gradient(180deg, rgba(245,158,11,.12), transparent), var(--card); }
+  .selected{ border-color:#60a5fa; box-shadow:0 0 0 1px rgba(96,165,250,.6) inset, var(--glow); }
 
-  /* 下：当日の班割（一段・横スクロール） */
+  /* 下：当日の班割（横1段・カード4枚） */
   .grid{
-    display:grid;
-    grid-auto-flow:column;               /* ← 常に1段（横並び） */
-    grid-auto-columns:minmax(280px,1fr); /* ← カード最小幅を少し広げた */
-    gap:12px;
-    padding:14px;
-    overflow-x:auto;
+    display:grid; grid-auto-flow:column; grid-auto-columns:minmax(300px,1fr);
+    gap:14px; padding:16px; overflow-x:auto;
   }
-  .card{background:var(--card);border:1px solid #243449;border-radius:12px;padding:16px;min-height:160px}
-  /* 見出し（番）は中立色。左線だけ淡い“番色”で差し色（班色とは別系統） */
-  .card h3{
-    margin:0 0 12px;
-    font-size:22px;           /* ← 番見出しを大きく */
-    font-weight:900;
-    letter-spacing:.5px;
-    color:var(--text);
-    padding-left:12px;
-    border-left:6px solid #334155; /* デフォルト（後で上書き） */
+  .card{
+    background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+    border:1px solid var(--border); border-radius:16px; padding:18px; min-height:168px;
+    backdrop-filter:blur(var(--blur)); box-shadow:var(--glow), var(--elev);
   }
-  .h-slot-1 h3{ border-left-color: var(--S1); }
-  .h-slot-2 h3{ border-left-color: var(--S2); }
-  .h-slot-3 h3{ border-left-color: var(--S3); }
-  .h-slot-x h3{ border-left-color: var(--Sx); }
 
+  /* 見出し（番）はニュートラルに。余白と字間で品よく強調 */
+  .card h3{margin:0 0 12px; font-size:22px; font-weight:900; letter-spacing:.4px;}
   .row{display:flex;justify-content:space-between;gap:10px;padding:12px 0;border-top:1px dashed #334155}
   .row:first-of-type{border-top:none}
   .label{color:var(--muted);font-size:14px}
-  /* 班名：さらに強調（大/極太/字間広め） */
-  .value{
-    font-weight:900;
-    font-size:28px;           /* ← 以前よりさらに大きく */
-    letter-spacing:.6px;
+
+  /* 班名は一番目立たせる（色は班カラー） */
+  .value{font-weight:900; font-size:30px; letter-spacing:.7px}
+  .team-A .value{ color: var(--A); text-shadow:0 0 10px color-mix(in oklab, var(--A) 30%, transparent); }
+  .team-B .value{ color: var(--B); text-shadow:0 0 10px color-mix(in oklab, var(--B) 30%, transparent); }
+  .team-C .value{ color: var(--C); text-shadow:0 0 10px color-mix(in oklab, var(--C) 30%, transparent); }
+  .team-D .value{ color: var(--D); text-shadow:0 0 10px color-mix(in oklab, var(--D) 30%, transparent); }
+
+  /* 休カードは淡い赤の面で示す（線は使わない） */
+  .offbox{
+    background:linear-gradient(180deg, rgba(253,164,175,.14), rgba(253,164,175,.06));
+    border:1px solid rgba(253,164,175,.5); padding:12px; border-radius:12px;
   }
 
-  /* 班の色（班名だけに効く：見出し色とは独立） */
-  .team-A .value{ color: var(--A); }
-  .team-B .value{ color: var(--B); }
-  .team-C .value{ color: var(--C); }
-  .team-D .value{ color: var(--D); }
-
-  /* 休カードの中身 */
-  .offbox{background:rgba(253,164,175,.1);border:1px dashed var(--off);padding:12px;border-radius:10px}
-  .footer{padding:10px;border-top:1px solid #1f2a44;color:var(--muted);font-size:12px}
+  /* 小さめ画面でも破綻しない調整 */
+  @media (max-width:720px){
+    .grid{ grid-auto-columns:minmax(260px, 1fr); }
+    .value{ font-size:26px; }
+    .card{ min-height:152px; }
+  }
 </style>
 </head>
 <body>
   <main class="app">
-    <!-- 上：ダイヤル -->
+    <!-- 上：日付ダイヤル -->
     <section class="panel" aria-label="日付ダイヤル">
-      <div class="dial-header">
+      <div class="hdr">
         <div class="title">日付</div>
         <div class="controls" role="group" aria-label="操作">
           <button class="btn" id="prevWeek" title="前へ7日">← 7日</button>
           <button class="btn" id="todayBtn" title="今日へ">今日</button>
           <button class="btn" id="nextWeek" title="次へ7日">7日 →</button>
           <label style="display:flex;align-items:center;gap:6px">
-            指定日
-            <input type="date" id="gotoDate" />
+            指定日 <input type="date" id="gotoDate" />
           </label>
         </div>
       </div>
-      <div id="dialWheel" class="dial-wheel" tabindex="0" aria-label="横にスクロールして日付を選択"></div>
+      <div id="dialWheel" class="wheel" tabindex="0" aria-label="横にスクロールして日付を選択"></div>
     </section>
 
-    <!-- 下：当日の班割（1段） -->
+    <!-- 下：当日の班割（横1段） -->
     <section class="panel" aria-label="シフト詳細">
-      <div class="dial-header" style="justify-content:space-between">
+      <div class="hdr" style="justify-content:space-between">
         <div id="selDateText" class="title">—</div>
         <div class="controls" style="margin-left:0">
-          <span class="btn" style="cursor:default;border-style:dashed">1番 08:00–16:00</span>
-          <span class="btn" style="cursor:default;border-style:dashed">2番 16:00–23:00</span>
-          <span class="btn" style="cursor:default;border-style:dashed">3番 23:00–08:00</span>
-          <span class="btn" style="cursor:default;border-style:dashed;color:var(--off);border-color:var(--off)">休</span>
+          <span class="chip" style="cursor:default">1番 08:00–16:00</span>
+          <span class="chip" style="cursor:default">2番 16:00–23:00</span>
+          <span class="chip" style="cursor:default">3番 23:00–08:00</span>
+          <span class="chip" style="cursor:default;color:var(--off);border-color:var(--off)">休</span>
         </div>
       </div>
       <div class="grid" id="grid"></div>
-      <div class="footer">
-        ※ 各班は <b>3勤1休</b>（Aの例：1,1,1,休,3,3,3,休,2,2,2,休）。<br/>
-        ※ ローテ基準は 2026-02-02 の実績（1番=B, 2番=A, 3番=D, 休=C）。初期表示は常に「今日」です。[1](https://ubeglobal-my.sharepoint.com/personal/32607u_ube_com/_layouts/15/Doc.aspx?sourcedoc=%7B5583F174-C593-41F5-8351-0688521D8C40%7D&file=shift_2026_2035.csv&action=default&mobileredirect=true)
+      <div style="padding:10px;border-top:1px solid var(--border);color:var(--muted);font-size:12px">
+        ※ 3勤1休：Aの例＝<b>1,1,1,休,3,3,3,休,2,2,2,休</b>。基準は 2026‑02‑02（1番=B, 2番=A, 3番=D, 休=C）。初期表示は常に「今日」。[1](https://ubeglobal-my.sharepoint.com/personal/32607u_ube_com/_layouts/15/Doc.aspx?sourcedoc=%7B5583F174-C593-41F5-8351-0688521D8C40%7D&file=shift_2026_2035.csv&action=default&mobileredirect=true)
       </div>
     </section>
   </main>
 
 <script>
-/** ====== 3勤1休ローテ（12日周期） ====== */
+/* ===== ローテーション設定（3勤1休 / 12日周期） ===== */
 const CYCLE = ["1","1","1","休","3","3","3","休","2","2","2","休"];
 const PERIOD = CYCLE.length;
-
-/** day0 で 1番=B, 2番=A, 3番=D, 休=C を満たす位相（δ=0,3,6,9） */
+/* day0 で 1番=B, 2番=A, 3番=D, 休=C を満たす位相（δ=0,3,6,9） */
 const PHASE = { A:9, B:0, C:3, D:6 };
 
-/** スロット（番） */
+/* スロット（番） */
 const SLOTS = {
-  "1": { name:"1番", time:"08:00–16:00", hClass:"h-slot-1" },
-  "2": { name:"2番", time:"16:00–23:00", hClass:"h-slot-2" },
-  "3": { name:"3番", time:"23:00–08:00", hClass:"h-slot-3" },
-  "休": { name:"休",  time:"—",           hClass:"h-slot-x" }
+  "1": { name:"1番", time:"08:00–16:00" },
+  "2": { name:"2番", time:"16:00–23:00" },
+  "3": { name:"3番", time:"23:00–08:00" },
+  "休": { name:"休",  time:"—" }
 };
-
-/** 班→色クラス（班名の値に掛かる） */
+/* 班→カード色クラス（班名の値に適用） */
 const TEAM_CLASS = { A:"team-A", B:"team-B", C:"team-C", D:"team-D" };
 
-/** ====== 日付ユーティリティ ====== */
-const dow = ["日","月","火","水","木","金","土"];
-const addDays = (d,n)=>{ const x=new Date(d); x.setDate(x.getDate()+n); x.setHours(0,0,0,0); return x; };
-const diffDays = (a,b)=> Math.floor((a-b)/(1000*60*60*24));
-const toISO = (d)=> { const z=new Date(d); z.setHours(0,0,0,0); return z.toISOString().slice(0,10); };
-const fmtYmd = (d)=> `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${dow[d.getDay()]}）`;
+/* ===== 日付ユーティリティ ===== */
+const dow=["日","月","火","水","木","金","土"];
+const addDays=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);x.setHours(0,0,0,0);return x;}
+const diffDays=(a,b)=>Math.floor((a-b)/(1000*60*60*24));
+const toISO=(d)=>{const z=new Date(d);z.setHours(0,0,0,0);return z.toISOString().slice(0,10);}
+const fmtYmd=(d)=>`${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${dow[d.getDay()]}）`;
 
-/** ====== 基準日 ======
- * ローテ基準（day0）は CSV 実績の 2026-02-02。初期表示は “今日” にします。
+/* ===== 基準日・初期表示 =====
+ * ローテ基準（day0）は CSV 実績の 2026-02-02。初期表示は“今日”。
  */
-const DAY0_DATE = new Date("2026-02-02T00:00:00"); // ローテ基準
-const TODAY = new Date(); TODAY.setHours(0,0,0,0);  // 初期表示
+const DAY0_DATE=new Date("2026-02-02T00:00:00");
+const TODAY=new Date(); TODAY.setHours(0,0,0,0);
 
-/** 指定日のスロット→班（毎日「1・2・3・休」が一つずつ） */
+/* 指定日のスロット→班（毎日「1・2・3・休」が一つずつ） */
 function assignmentFor(date){
-  const n = ((diffDays(date, DAY0_DATE) % PERIOD) + PERIOD) % PERIOD;
-  const symbolOfTeam = {};
+  const n=((diffDays(date,DAY0_DATE)%PERIOD)+PERIOD)%PERIOD;
+  const symbolOfTeam={};
   Object.keys(PHASE).forEach(team=>{
-    const idx = (n + PHASE[team]) % PERIOD;
-    symbolOfTeam[team] = CYCLE[idx];
+    const idx=(n+PHASE[team])%PERIOD;
+    symbolOfTeam[team]=CYCLE[idx];
   });
-  const result = { "1":null, "2":null, "3":null, "休":null };
-  Object.entries(symbolOfTeam).forEach(([team, sym])=>{
-    result[sym] = team;
-  });
+  const result={"1":null,"2":null,"3":null,"休":null};
+  Object.entries(symbolOfTeam).forEach(([team,sym])=>{ result[sym]=team; });
   return result; // {"1":"A|B|C|D", "2":..., "3":..., "休":...}
 }
 
-/** ====== 画面要素 ====== */
-const dialWheel   = document.getElementById('dialWheel');
-const selDateText = document.getElementById('selDateText');
-const grid        = document.getElementById('grid');
-const prevWeekBtn = document.getElementById('prevWeek');
-const nextWeekBtn = document.getElementById('nextWeek');
-const todayBtn    = document.getElementById('todayBtn');
-const gotoDateInp = document.getElementById('gotoDate');
+/* ===== 画面要素 ===== */
+const dialWheel=document.getElementById('dialWheel');
+const selDateText=document.getElementById('selDateText');
+const grid=document.getElementById('grid');
+const prevWeekBtn=document.getElementById('prevWeek');
+const nextWeekBtn=document.getElementById('nextWeek');
+const todayBtn=document.getElementById('todayBtn');
+const gotoDateInp=document.getElementById('gotoDate');
 
-/** ダイヤル描画（前後各10年） */
+/* 上ダイヤルの描画（前後10年分） */
 function renderDialAround(centerDate){
-  dialWheel.innerHTML = "";
-  const span = 3650;
+  dialWheel.innerHTML="";
+  const span=3650;
   for(let i=-span;i<=span;i++){
-    const d = addDays(centerDate, i);
-    const b = document.createElement('button');
-    b.className = 'date-item' + (toISO(d)===toISO(TODAY) ? ' today' : '');
-    b.setAttribute('data-date', toISO(d));
-    b.innerHTML = `
+    const d=addDays(centerDate,i);
+    const b=document.createElement('button');
+    b.className='day'+(toISO(d)===toISO(TODAY) ? ' today':'');
+    b.setAttribute('data-date',toISO(d));
+    b.innerHTML=`
       <div class="ymd">${d.getMonth()+1}/${d.getDate()}</div>
       <div class="dow">${dow[d.getDay()]}</div>
-      <div class="tag">${d.getFullYear()}</div>
-    `;
-    b.addEventListener('click', ()=> selectDate(d, {scrollIntoView:true}));
+      <div class="tag">${d.getFullYear()}</div>`;
+    b.addEventListener('click',()=>selectDate(d,{scrollIntoView:true}));
     dialWheel.appendChild(b);
   }
 }
 
-/** 下のカード描画（常に横一列） */
+/* 下：カード群の描画（横1段） */
 function renderRight(date){
-  selDateText.textContent = fmtYmd(date);
-  const map = assignmentFor(date); // {"1":team, "2":team, "3":team, "休":team}
-  grid.innerHTML = "";
+  selDateText.textContent=fmtYmd(date);
+  const map=assignmentFor(date); // {"1":team, "2":team, "3":team, "休":team}
+  grid.innerHTML="";
 
-  const makeCard = (sym)=>{
-    const team = map[sym];
-    const card = document.createElement('div');
-    const hClass = SLOTS[sym].hClass;
-    card.className = `card ${hClass} ${TEAM_CLASS[team] || ""}`;
-    card.innerHTML = `
+  const makeCard=(sym)=>{
+    const team=map[sym];
+    const card=document.createElement('div');
+    card.className=`card ${TEAM_CLASS[team]||""}`;
+    card.innerHTML=`
       <h3>${SLOTS[sym].name}</h3>
       <div class="row"><div class="label">班</div><div class="value">${team}</div></div>
-      <div class="row"><div class="label">時刻</div><div>${SLOTS[sym].time}</div></div>
-    `;
+      <div class="row"><div class="label">時刻</div><div>${SLOTS[sym].time}</div></div>`;
     return card;
   };
 
@@ -227,68 +233,55 @@ function renderRight(date){
   grid.appendChild(makeCard("2"));
   grid.appendChild(makeCard("3"));
 
-  // 休
-  const offTeam = map["休"];
-  const offCard = document.createElement('div');
-  offCard.className = 'card h-slot-x';
-  offCard.innerHTML = `
+  // 休（専用カード）
+  const offTeam=map["休"];
+  const off=document.createElement('div');
+  off.className='card';
+  off.innerHTML=`
     <h3>休</h3>
     <div class="offbox">
       <div style="display:flex;justify-content:space-between;align-items:center">
         <div class="label">班</div>
-        <div style="font-weight:900;color:var(--off);font-size:28px;letter-spacing:.6px">${offTeam}</div>
+        <div style="font-weight:900;font-size:30px;letter-spacing:.7px;color:var(--off)">${offTeam}</div>
       </div>
-    </div>
-  `;
-  grid.appendChild(offCard);
+    </div>`;
+  grid.appendChild(off);
 }
 
-/** 選択処理（ダイヤル＆dateピッカーから呼ぶ） */
-function selectDate(d, opts={}){
+/* 選択処理（ダイヤル＆dateピッカー） */
+function selectDate(d,opts={}){
   renderRight(d);
-  // ダイヤルの選択表示
-  [...dialWheel.children].forEach(el => {
-    el.classList.toggle('selected', el.getAttribute('data-date')===toISO(d));
-  });
-  // date ピッカー同期
-  gotoDateInp.value = toISO(d);
+  [...dialWheel.children].forEach(el=>{ el.classList.toggle('selected', el.getAttribute('data-date')===toISO(d)); });
+  gotoDateInp.value=toISO(d);
   if(opts.scrollIntoView){
-    const el = [...dialWheel.children].find(x=>x.getAttribute('data-date')===toISO(d));
-    if(el){ el.scrollIntoView({inline:'center', block:'nearest', behavior:'smooth'}); }
+    const el=[...dialWheel.children].find(x=>x.getAttribute('data-date')===toISO(d));
+    if(el){ el.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'}); }
   }
 }
 
-/** 初期化：初期表示は“今日” */
+/* 初期化：開いた日の割当を表示 */
 function init(){
   renderDialAround(TODAY);
-  selectDate(TODAY, {scrollIntoView:true});  // ← 開いた日の割当を表示
+  selectDate(TODAY,{scrollIntoView:true});
 
-  // ナビ
-  prevWeekBtn.addEventListener('click', ()=>{
-    const current = new Date(gotoDateInp.value || TODAY);
-    const d = addDays(current, -7);
-    selectDate(d, {scrollIntoView:true});
+  prevWeekBtn.addEventListener('click',()=>{
+    const current=new Date(gotoDateInp.value||TODAY);
+    selectDate(addDays(current,-7),{scrollIntoView:true});
   });
-  nextWeekBtn.addEventListener('click', ()=>{
-    const current = new Date(gotoDateInp.value || TODAY);
-    const d = addDays(current, 7);
-    selectDate(d, {scrollIntoView:true});
+  nextWeekBtn.addEventListener('click',()=>{
+    const current=new Date(gotoDateInp.value||TODAY);
+    selectDate(addDays(current,7),{scrollIntoView:true});
   });
-  todayBtn.addEventListener('click', ()=>{
-    selectDate(TODAY, {scrollIntoView:true});
-  });
-  // 日付指定
-  gotoDateInp.addEventListener('change', ()=>{
-    const v = gotoDateInp.value;
-    if(!v) return;
-    const d = new Date(v);
-    d.setHours(0,0,0,0);
-    selectDate(d, {scrollIntoView:true});
+  todayBtn.addEventListener('click',()=>selectDate(TODAY,{scrollIntoView:true}));
+  gotoDateInp.addEventListener('change',()=>{
+    const v=gotoDateInp.value; if(!v) return;
+    const d=new Date(v); d.setHours(0,0,0,0);
+    selectDate(d,{scrollIntoView:true});
   });
 }
-
 init();
 </script>
 </body>
 </html>
+
 
