@@ -8,11 +8,18 @@
   :root{
     --bg:#0b1220; --panel:#0f172a; --card:#111827; --text:#e5e7eb; --muted:#94a3b8;
     --accent:#60a5fa; --accent-weak:#3b82f6; --today:#f59e0b; --off:#fda4af;
-    /* 班ごとのテーマカラー（必要ならお好みで変更OK） */
-    --A:#22d3ee; /* シアン */
-    --B:#a78bfa; /* パープル */
-    --C:#34d399; /* グリーン */
-    --D:#fbbf24; /* アンバー */
+
+    /* 班カラー（ビビッド：班名の強調に使用） */
+    --A:#22d3ee;  /* A: シアン */
+    --B:#a78bfa;  /* B: パープル */
+    --C:#34d399;  /* C: グリーン */
+    --D:#fbbf24;  /* D: アンバー */
+
+    /* スロット（番）カラー：淡色（番の見出し左線だけに使用） */
+    --S1:#3b82f6; /* 1番: ブルー系（淡） */
+    --S2:#10b981; /* 2番: グリーン系（淡） */
+    --S3:#f59e0b; /* 3番: オレンジ系（淡） */
+    --Sx:#fda4af; /* 休:   ピンク系（淡） */
   }
   html,body{height:100%;margin:0;background:var(--bg);color:var(--text);
     font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans JP","Hiragino Kaku Gothic ProN",Meiryo,sans-serif}
@@ -27,7 +34,7 @@
   .btn:hover{border-color:var(--accent-weak);color:var(--accent)}
   input[type="date"]{background:#0b1220;color:var(--text);border:1px solid #334155;border-radius:10px;padding:6px 10px}
 
-  .dial-wheel{display:grid;grid-auto-flow:column;grid-auto-columns: minmax(120px, 1fr);
+  .dial-wheel{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(120px,1fr);
     gap:10px;overflow:auto;padding:12px;scroll-snap-type:x mandatory}
   .date-item{scroll-snap-align:center;display:grid;gap:6px;align-content:center;justify-items:center;
     padding:12px;border-radius:10px;background:#0e1730;border:1px solid #1f2a44;min-height:84px;cursor:pointer}
@@ -41,42 +48,47 @@
   /* 下：当日の班割（一段・横スクロール） */
   .grid{
     display:grid;
-    grid-auto-flow: column;               /* ← 横方向に並べる（常に1段） */
-    grid-auto-columns: minmax(260px, 1fr);/* ← 各カードの最小幅 */
+    grid-auto-flow:column;               /* ← 常に1段（横並び） */
+    grid-auto-columns:minmax(280px,1fr); /* ← カード最小幅を少し広げた */
     gap:12px;
     padding:14px;
-    overflow-x:auto;                      /* ← 横スクロール許可 */
+    overflow-x:auto;
   }
-  .card{background:var(--card);border:1px solid #243449;border-radius:12px;padding:14px;min-height:148px}
+  .card{background:var(--card);border:1px solid #243449;border-radius:12px;padding:16px;min-height:160px}
+  /* 見出し（番）は中立色。左線だけ淡い“番色”で差し色（班色とは別系統） */
   .card h3{
-    margin:0 0 10px;
-    font-size:20px;           /* ← 番（見出し）を大きく */
+    margin:0 0 12px;
+    font-size:22px;           /* ← 番見出しを大きく */
     font-weight:900;
     letter-spacing:.5px;
+    color:var(--text);
+    padding-left:12px;
+    border-left:6px solid #334155; /* デフォルト（後で上書き） */
   }
-  .row{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px dashed #334155}
+  .h-slot-1 h3{ border-left-color: var(--S1); }
+  .h-slot-2 h3{ border-left-color: var(--S2); }
+  .h-slot-3 h3{ border-left-color: var(--S3); }
+  .h-slot-x h3{ border-left-color: var(--Sx); }
+
+  .row{display:flex;justify-content:space-between;gap:10px;padding:12px 0;border-top:1px dashed #334155}
   .row:first-of-type{border-top:none}
   .label{color:var(--muted);font-size:14px}
+  /* 班名：さらに強調（大/極太/字間広め） */
   .value{
-    font-weight:900;          /* ← 班を太字で強調 */
-    font-size:22px;           /* ← 班のフォントサイズUP */
-    letter-spacing:.5px;
+    font-weight:900;
+    font-size:28px;           /* ← 以前よりさらに大きく */
+    letter-spacing:.6px;
   }
-  /* 休カードの中身 */
-  .offbox{background:rgba(253,164,175,.1);border:1px dashed var(--off);padding:10px;border-radius:10px}
-  .footer{padding:10px;border-top:1px solid #1f2a44;color:var(--muted);font-size:12px}
 
-  /* 班ごとの色クラス（文字＆アクセント） */
+  /* 班の色（班名だけに効く：見出し色とは独立） */
   .team-A .value{ color: var(--A); }
   .team-B .value{ color: var(--B); }
   .team-C .value{ color: var(--C); }
   .team-D .value{ color: var(--D); }
 
-  /* 見出し（番）の飾り線にも班色のニュアンスを少し足す */
-  .team-A h3{ border-left:4px solid var(--A); padding-left:10px; }
-  .team-B h3{ border-left:4px solid var(--B); padding-left:10px; }
-  .team-C h3{ border-left:4px solid var(--C); padding-left:10px; }
-  .team-D h3{ border-left:4px solid var(--D); padding-left:10px; }
+  /* 休カードの中身 */
+  .offbox{background:rgba(253,164,175,.1);border:1px dashed var(--off);padding:12px;border-radius:10px}
+  .footer{padding:10px;border-top:1px solid #1f2a44;color:var(--muted);font-size:12px}
 </style>
 </head>
 <body>
@@ -112,7 +124,7 @@
       <div class="grid" id="grid"></div>
       <div class="footer">
         ※ 各班は <b>3勤1休</b>（Aの例：1,1,1,休,3,3,3,休,2,2,2,休）。<br/>
-        ※ 基準は 2026-02-02 の実績（1番=B, 2番=A, 3番=D, 休=C）。必要なら「今日基準」にも変更可。
+        ※ ローテ基準は 2026-02-02 の実績（1番=B, 2番=A, 3番=D, 休=C）。初期表示は常に「今日」です。[1](https://ubeglobal-my.sharepoint.com/personal/32607u_ube_com/_layouts/15/Doc.aspx?sourcedoc=%7B5583F174-C593-41F5-8351-0688521D8C40%7D&file=shift_2026_2035.csv&action=default&mobileredirect=true)
       </div>
     </section>
   </main>
@@ -127,12 +139,13 @@ const PHASE = { A:9, B:0, C:3, D:6 };
 
 /** スロット（番） */
 const SLOTS = {
-  "1": { name:"1番", time:"08:00–16:00" },
-  "2": { name:"2番", time:"16:00–23:00" },
-  "3": { name:"3番", time:"23:00–08:00" },
-  "休": { name:"休",  time:"—" }
+  "1": { name:"1番", time:"08:00–16:00", hClass:"h-slot-1" },
+  "2": { name:"2番", time:"16:00–23:00", hClass:"h-slot-2" },
+  "3": { name:"3番", time:"23:00–08:00", hClass:"h-slot-3" },
+  "休": { name:"休",  time:"—",           hClass:"h-slot-x" }
 };
 
+/** 班→色クラス（班名の値に掛かる） */
 const TEAM_CLASS = { A:"team-A", B:"team-B", C:"team-C", D:"team-D" };
 
 /** ====== 日付ユーティリティ ====== */
@@ -143,10 +156,10 @@ const toISO = (d)=> { const z=new Date(d); z.setHours(0,0,0,0); return z.toISOSt
 const fmtYmd = (d)=> `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${dow[d.getDay()]}）`;
 
 /** ====== 基準日 ======
- * CSV 実績に合わせて 2026-02-02 を day0（必要なら new Date() に変更可）
+ * ローテ基準（day0）は CSV 実績の 2026-02-02。初期表示は “今日” にします。
  */
-const DAY0_DATE = new Date("2026-02-02T00:00:00");
-const TODAY = new Date(); TODAY.setHours(0,0,0,0);
+const DAY0_DATE = new Date("2026-02-02T00:00:00"); // ローテ基準
+const TODAY = new Date(); TODAY.setHours(0,0,0,0);  // 初期表示
 
 /** 指定日のスロット→班（毎日「1・2・3・休」が一つずつ） */
 function assignmentFor(date){
@@ -195,14 +208,13 @@ function renderDialAround(centerDate){
 function renderRight(date){
   selDateText.textContent = fmtYmd(date);
   const map = assignmentFor(date); // {"1":team, "2":team, "3":team, "休":team}
-
   grid.innerHTML = "";
 
-  // カード生成ユーティリティ（班色クラスを付与）
   const makeCard = (sym)=>{
     const team = map[sym];
     const card = document.createElement('div');
-    card.className = `card ${TEAM_CLASS[team] || ""}`;
+    const hClass = SLOTS[sym].hClass;
+    card.className = `card ${hClass} ${TEAM_CLASS[team] || ""}`;
     card.innerHTML = `
       <h3>${SLOTS[sym].name}</h3>
       <div class="row"><div class="label">班</div><div class="value">${team}</div></div>
@@ -211,21 +223,20 @@ function renderRight(date){
     return card;
   };
 
-  // 横一列：1番 → 2番 → 3番 → 休
   grid.appendChild(makeCard("1"));
   grid.appendChild(makeCard("2"));
   grid.appendChild(makeCard("3"));
 
-  // 休は色クラスは付けず、休専用のスタイルを使用
+  // 休
   const offTeam = map["休"];
   const offCard = document.createElement('div');
-  offCard.className = 'card';
+  offCard.className = 'card h-slot-x';
   offCard.innerHTML = `
     <h3>休</h3>
     <div class="offbox">
       <div style="display:flex;justify-content:space-between;align-items:center">
         <div class="label">班</div>
-        <div style="font-weight:900;color:var(--off);font-size:22px;letter-spacing:.5px">${offTeam}</div>
+        <div style="font-weight:900;color:var(--off);font-size:28px;letter-spacing:.6px">${offTeam}</div>
       </div>
     </div>
   `;
@@ -247,10 +258,10 @@ function selectDate(d, opts={}){
   }
 }
 
-/** 初期化 */
+/** 初期化：初期表示は“今日” */
 function init(){
   renderDialAround(TODAY);
-  selectDate(TODAY, {scrollIntoView:true});
+  selectDate(TODAY, {scrollIntoView:true});  // ← 開いた日の割当を表示
 
   // ナビ
   prevWeekBtn.addEventListener('click', ()=>{
@@ -280,6 +291,4 @@ init();
 </script>
 </body>
 </html>
-
-
 
