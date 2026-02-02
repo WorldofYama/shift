@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>4班ローテ三交代（上下レイアウト）</title>
+<title>4班・3勤1休ローテ（三交代・上下レイアウト）</title>
 <style>
   :root{
     --bg:#0b1220; --panel:#0f172a; --card:#111827; --text:#e5e7eb; --muted:#94a3b8;
@@ -77,28 +77,40 @@
         </div>
       </div>
       <div class="grid" id="grid"></div>
-      <div class="footer">※ ローテ基準は 2026-02-02 の並び（1番=B, 2番=A, 3番=D, 休=C）。以後は毎日ローテーション。</div>
+      <div class="footer">
+        ※ 各班は <b>3勤1休</b> で <b>1→休→3→休→2→休</b> を 12日周期でくり返します。<br/>
+        ※ 基準は 2026-02-02 の実績（1番=B, 2番=A, 3番=D, 休=C）に揃え済み。[1](https://ubeglobal-my.sharepoint.com/personal/32607u_ube_com/_layouts/15/Doc.aspx?sourcedoc=%7B5583F174-C593-41F5-8351-0688521D8C40%7D&file=shift_2026_2035.csv&action=default&mobileredirect=true)
+      </div>
     </section>
   </main>
 
 <script>
-/** ====== 勤務パターン設定 ====== */
-const slots = [
-  { name:"1番", time:"08:00–16:00" },
-  { name:"2番", time:"16:00–23:00" },
-  { name:"3番", time:"23:00–08:00" },
-  { name:"休",  time:"—" }
-];
-// 4班
-const teams = ["A","B","C","D"];
-
-/**
- * ローテ基準（day0）：CSVの 2026-02-02 実績
- * 1番=B, 2番=A, 3番=D, 休=C → [B, A, D, C]
- * （必要があればここを書き換えれば初期並びを変更できます）
+/** ====== 勤務パターン：3勤1休 × ローテ ======
+ * 1,1,1,休,3,3,3,休,2,2,2,休 → 12日周期
+ * これを各班ごとに位相シフト（δ）して、毎日「1・2・3・休」が必ず一つずつになるよう整列。
  */
-const DAY0_DATE = new Date("2026-02-02T00:00:00"); // 固定基準日
-const DAY0_ORDER = ["B","A","D","C"];
+const CYCLE = ["1","1","1","休","3","3","3","休","2","2","2","休"]; // 12ステップ
+const PERIOD = CYCLE.length;
+
+/** 班と位相の対応（δ）：
+ * day0（基準日）で 1番=B, 2番=A, 3番=D, 休=C になるように
+ * δ を {0,3,6,9}（3刻み）に割当。
+ *   δ=0  → day0は "1"
+ *   δ=3  → day0は "休"
+ *   δ=6  → day0は "3"
+ *   δ=9  → day0は "2"
+ * よって [B,C,D,A] に [0,3,6,9] を割当。
+ */
+const TEAMS = ["A","B","C","D"]; // 表示順のため
+const PHASE = { A:9, B:0, C:3, D:6 };
+
+/** スロット名称と時刻 */
+const SLOTS = {
+  "1": { name:"1番", time:"08:00–16:00" },
+  "2": { name:"2番", time:"16:00–23:00" },
+  "3": { name:"3番", time:"23:00–08:00" },
+  "休": { name:"休",  time:"—" }
+};
 
 /** ====== 日付ユーティリティ ====== */
 const dow = ["日","月","火","水","木","金","土"];
@@ -107,13 +119,28 @@ const diffDays = (a,b)=> Math.floor((a-b)/(1000*60*60*24));
 const toISO = (d)=> { const z=new Date(d); z.setHours(0,0,0,0); return z.toISOString().slice(0,10); };
 const fmtYmd = (d)=> `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${dow[d.getDay()]}）`;
 
-/** 指定日の担当を計算：DAY0_ORDER を日数差分ぶんローテーション */
+/** ====== 基準日の設定 ======
+ * CSVの実績に合わせて 2026-02-02 を day0 に取る。
+ * 「今日を基準にしたい」場合は下の DAY0_DATE を new Date() に変えてOK。
+ */
+const DAY0_DATE = new Date("2026-02-02T00:00:00"); // ←必要なら new Date() に
+const TODAY = new Date(); TODAY.setHours(0,0,0,0);
+
+/** 指定日の「各班が何を担当か」を返す（key: slot → value: team） */
 function assignmentFor(date){
-  const days = diffDays(date, DAY0_DATE);
-  const L = DAY0_ORDER.length;
-  // date が day0 より n 日後 → 配列を左に n 回回す（1日で 1番→休 が1つ後ろへずれる）
-  const order = DAY0_ORDER.map((_,i)=> DAY0_ORDER[(i - (days % L) + L) % L]);
-  return slots.map((slot, idx)=> ({ slot:slot.name, time:slot.time, team:order[idx] }));
+  const n = ((diffDays(date, DAY0_DATE) % PERIOD) + PERIOD) % PERIOD;
+  // 各班のその日の記号（"1"|"2"|"3"|"休"）を出す
+  const symbolOfTeam = {};
+  Object.keys(PHASE).forEach(team=>{
+    const idx = (n + PHASE[team]) % PERIOD;
+    symbolOfTeam[team] = CYCLE[idx];
+  });
+  // スロット→班（列）に反転。毎日ちょうど1つずつになる構成（δ=0,3,6,9）。
+  const result = { "1":null, "2":null, "3":null, "休":null };
+  Object.entries(symbolOfTeam).forEach(([team, sym])=>{
+    result[sym] = team;
+  });
+  return result;
 }
 
 /** ====== 画面要素 ====== */
@@ -125,111 +152,10 @@ const nextWeekBtn = document.getElementById('nextWeek');
 const todayBtn    = document.getElementById('todayBtn');
 const gotoDateInp = document.getElementById('gotoDate');
 
-const TODAY = new Date(); TODAY.setHours(0,0,0,0);
-
-/** 横ダイヤルを中心日付の前後に広げて描画（前後各 3650 日 ≒ 10年分） */
+/** ダイヤル描画（前後各 10年ぶん） */
 function renderDialAround(centerDate){
   dialWheel.innerHTML = "";
   const span = 3650;
   for(let i=-span;i<=span;i++){
     const d = addDays(centerDate, i);
-    const b = document.createElement('button');
-    b.className = 'date-item' + (toISO(d)===toISO(TODAY) ? ' today' : '');
-    b.setAttribute('data-date', toISO(d));
-    b.innerHTML = `
-      <div class="ymd">${d.getMonth()+1}/${d.getDate()}</div>
-      <div class="dow">${dow[d.getDay()]}</div>
-      <div class="tag">${d.getFullYear()}</div>
-    `;
-    b.addEventListener('click', ()=> selectDate(d, {scrollIntoView:true}));
-    dialWheel.appendChild(b);
-  }
-}
 
-/** 下のカード描画 */
-function renderRight(date){
-  selDateText.textContent = fmtYmd(date);
-  const data = assignmentFor(date);
-
-  grid.innerHTML = "";
-
-  // 1番・2番・3番
-  data.slice(0,3).forEach(({slot,time,team})=>{
-    const card = document.createElement('div');
-    card.className = 'card';
-    card.innerHTML = `
-      <h3>${slot}</h3>
-      <div class="row"><div class="label">班</div><div class="value">${team}</div></div>
-      <div class="row"><div class="label">時刻</div><div>${time}</div></div>
-    `;
-    grid.appendChild(card);
-  });
-
-  // 休
-  const offTeam = data[3].team;
-  const offCard = document.createElement('div');
-  offCard.className = 'card';
-  offCard.innerHTML = `
-    <h3>休</h3>
-    <div class="offbox">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div class="label">班</div>
-        <div style="font-weight:700;color:var(--off)">${offTeam}</div>
-      </div>
-    </div>
-  `;
-  grid.appendChild(offCard);
-}
-
-/** 選択処理（ダイヤルと日付指定の双方から呼ばれる） */
-function selectDate(d, opts={}){
-  renderRight(d);
-  // ダイヤルの選択表示
-  [...dialWheel.children].forEach(el => {
-    el.classList.toggle('selected', el.getAttribute('data-date')===toISO(d));
-  });
-  // date ピッカーも同期
-  gotoDateInp.value = toISO(d);
-  // スクロールで中央に寄せる
-  if(opts.scrollIntoView){
-    const el = [...dialWheel.children].find(x=>x.getAttribute('data-date')===toISO(d));
-    if(el){ el.scrollIntoView({inline:'center', block:'nearest', behavior:'smooth'}); }
-  }
-}
-
-/** 初期化 */
-function init(){
-  renderDialAround(TODAY);
-  selectDate(TODAY, {scrollIntoView:true});
-
-  // ナビゲーション
-  prevWeekBtn.addEventListener('click', ()=>{
-    const current = new Date(gotoDateInp.value || TODAY);
-    const d = addDays(current, -7);
-    selectDate(d, {scrollIntoView:true});
-  });
-  nextWeekBtn.addEventListener('click', ()=>{
-    const current = new Date(gotoDateInp.value || TODAY);
-    const d = addDays(current, 7);
-    selectDate(d, {scrollIntoView:true});
-  });
-  todayBtn.addEventListener('click', ()=>{
-    selectDate(TODAY, {scrollIntoView:true});
-  });
-  // 日付指定
-  gotoDateInp.addEventListener('change', ()=>{
-    const v = gotoDateInp.value;
-    if(!v) return;
-    const d = new Date(v);
-    d.setHours(0,0,0,0);
-    // 選択日がダイヤル範囲外でも OK。スクロール感演出のため近傍へ寄せる。
-    selectDate(d, {scrollIntoView:true});
-  });
-}
-
-init();
-</script>
-</body>
-</html>
-
-</html>
