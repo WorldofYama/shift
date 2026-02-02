@@ -3,29 +3,26 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>4班・3勤1休ローテ（三交代／上下・一段・テーマ切替）</title>
-
-<!-- ポップ用の丸ゴ系フォント（任意。ブロック環境では読み込めなくてもOK／フォールバックあり） -->
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700;800;900&family=Nunito:wght@700;900&display=swap" rel="stylesheet">
+<title>4班・3勤1休ローテ（三交代／スクロールなし特大フォント）</title>
 
 <style>
   :root{
-    /* サイズ（ここで一括調整） */
-    --slot-size: 28px;   /* ← 番（1番/2番/3番/休）の見出し */
-    --team-size: 40px;   /* ← 班名（A/B/C/D） */
-    --team-weight: 900;
+    /* ========= 可変サイズ（ここをいじれば全体のバランスを一括調整） ========= */
+    /* 見出し（番）…画面幅に応じて 22px〜34px */
+    --slot-size: clamp(22px, 2.2vw, 34px);
+    /* 班名…画面幅に応じて 28px〜46px（広い画面ではデカく） */
+    --team-size: clamp(28px, 3.2vw, 46px);
+    /* パディング…窮屈になりすぎない範囲で自動縮小 */
+    --card-pad: clamp(10px, 1.6vw, 18px);
+    --grid-gap: clamp(8px, 1.2vw, 14px);
 
-    /* 共通カラー */
+    /* カラー */
     --bg:#0a0f1c; --panel:#0c1528; --card:rgba(18,26,44,.6);
     --text:#f1f5f9; --muted:#94a3b8; --surface:#0e1830;
     --today:#f59e0b; --off:#fda4af; --border:#1f2a44;
 
     /* 班カラー（ビビッド） */
-    --A:#22d3ee;  /* シアン  */
-    --B:#a78bfa;  /* パープル*/
-    --C:#34d399;  /* グリーン*/
-    --D:#fbbf24;  /* アンバー*/
+    --A:#22d3ee;  --B:#a78bfa;  --C:#34d399;  --D:#fbbf24;
 
     /* 効果 */
     --blur: 12px;
@@ -33,49 +30,27 @@
     --glow: 0 0 0 1px rgba(148,163,184,.08);
   }
 
-  /* ===== モダンテーマ（既定） ===== */
-  .theme-modern{
-    --bg:#0a0f1c; --panel:#0c1528; --card:rgba(18,26,44,.6);
-    --text:#f1f5f9; --muted:#94a3b8; --surface:#0e1830;
-  }
-
-  /* ===== ポップテーマ（明るめ・丸み・パステル） ===== */
-  .theme-pop{
-    --bg:#0f1225; --panel:#12163a; --card:rgba(25,32,78,.55);
-    --text:#fdfcff; --muted:#cbd5e1; --surface:#192063;
-    /* ポップ時はさらに大きく：必要ならここだけ上書き */
-    --slot-size: 30px;
-    --team-size: 44px;
-  }
-
-  /* 背景 */
   html,body{height:100%;margin:0;color:var(--text);
-    font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans JP","Hiragino Kaku Gothic ProN",Meiryo,sans-serif;}
-  body.theme-pop{
-    font-family:"M PLUS Rounded 1c","Nunito",system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans JP","Hiragino Kaku Gothic ProN",Meiryo,sans-serif;
-  }
-  body{
-    background:
-      radial-gradient(1200px 800px at 10% -10%, #1e293b 0%, var(--bg) 50%),
-      radial-gradient(1200px 800px at 110% 110%, #0b3a5b 0%, var(--bg) 50%);
-  }
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans JP","Hiragino Kaku Gothic ProN",Meiryo,sans-serif;
+    background:radial-gradient(1200px 800px at 10% -10%, #1e293b 0%, var(--bg) 50%),
+               radial-gradient(1200px 800px at 110% 110%, #0b3a5b 0%, var(--bg) 50%);}
   body:after{
     content:""; position:fixed; inset:0; pointer-events:none;
     background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" fill="none"><path d="M40 0v80M0 40h80" stroke="rgba(255,255,255,0.02)" stroke-width="1"/></svg>');
     background-size:80px 80px; mix-blend-mode:overlay; opacity:.8;
   }
 
-  .app{min-height:100vh;display:grid;grid-template-rows:auto 1fr;gap:14px;padding:16px;}
+  .app{min-height:100vh;display:grid;grid-template-rows:auto 1fr;gap:var(--grid-gap);padding:clamp(10px, 2vw, 16px);}
   .panel{
     background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
-    border:1px solid var(--border); border-radius:18px; overflow:hidden; backdrop-filter:blur(10px);
+    border:1px solid var(--border); border-radius:16px; overflow:hidden; backdrop-filter:blur(10px);
     box-shadow:var(--glow), var(--elev);
   }
 
-  /* ヘッダー（共通） */
-  .hdr{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:12px 14px;border-bottom:1px solid var(--border);
-    background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,0));}
-  .title{font-weight:900;font-size:19px;letter-spacing:.3px}
+  /* 上：日付ダイヤル（横スクロールはOK／ここは操作領域なので可） */
+  .hdr{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--border);
+       background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,0));}
+  .title{font-weight:900;font-size:clamp(16px, 1.6vw, 19px);letter-spacing:.3px}
   .controls{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
   .btn,.chip,input[type="date"]{
     background:var(--surface); color:var(--text); border:1px solid #334155; border-radius:12px; padding:8px 12px; font-weight:700;
@@ -83,62 +58,60 @@
   .btn:hover{border-color:#3b82f6; color:#93c5fd}
   input[type="date"]{padding:7px 12px;}
 
-  /* 上：横ダイヤル */
-  .wheel{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(120px,1fr);gap:12px;overflow:auto;padding:14px;scroll-snap-type:x mandatory}
+  .wheel{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(120px,1fr);gap:12px;overflow:auto;padding:12px;scroll-snap-type:x mandatory}
   .day{
-    scroll-snap-align:center; display:grid; gap:6px; place-items:center; padding:14px 10px;
-    border:1px solid var(--border); border-radius:16px; background:var(--card);
+    scroll-snap-align:center; display:grid; gap:6px; place-items:center; padding:12px 10px;
+    border:1px solid var(--border); border-radius:14px; background:var(--card);
     backdrop-filter:blur(var(--blur)); box-shadow:var(--glow);
-    min-height:96px; cursor:pointer; transition:transform .12s ease, border-color .15s ease, background-color .15s ease;
+    min-height:88px; cursor:pointer; transition:transform .12s ease, border-color .15s ease, background-color .15s ease;
   }
   .day:hover{ transform:translateY(-2px); border-color:#375079; }
-  .ymd{font-weight:900; letter-spacing:.2px; font-size:16px}
-  .dow{font-size:12px; color:var(--muted)}
-  .tag{font-size:11px; color:var(--muted)}
+  .ymd{font-weight:900; letter-spacing:.2px; font-size:clamp(14px, 1.4vw, 16px)}
+  .dow,.tag{font-size:12px; color:var(--muted)}
   .today{ outline:2px solid var(--today); outline-offset:-2px; background:linear-gradient(180deg, rgba(245,158,11,.12), transparent), var(--card); }
   .selected{ border-color:#60a5fa; box-shadow:0 0 0 1px rgba(96,165,250,.6) inset, var(--glow); }
 
-  /* 下：当日の班割（横1段） */
-  .grid{ display:grid; grid-auto-flow:column; grid-auto-columns:minmax(320px,1fr); gap:14px; padding:16px; overflow-x:auto; }
+  /* 下：当日の班割（スクロールなし） */
+  .grid{
+    display:grid;
+    grid-template-columns: repeat(4, 1fr);   /* ← 常に4等分（横スクロールしない） */
+    gap:var(--grid-gap);
+    padding:var(--grid-gap);
+    overflow:visible;
+    align-items:stretch;
+  }
   .card{
     background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
-    border:1px solid var(--border); border-radius:18px; padding:20px; min-height:176px;
+    border:1px solid var(--border); border-radius:16px; padding:var(--card-pad);
+    min-height:clamp(120px, 18vh, 180px);    /* 画面高にも追従し、圧迫感を抑える */
     backdrop-filter:blur(var(--blur)); box-shadow:var(--glow), var(--elev);
   }
 
-  /* 見出し（番）：さらに大きく */
-  .card h3{ margin:0 0 12px; font-size:var(--slot-size); font-weight:900; letter-spacing:.5px; }
+  /* 見出し（番）を大きく */
+  .card h3{ margin:0 0 8px; font-size:var(--slot-size); font-weight:900; letter-spacing:.5px; }
 
-  .row{display:flex;justify-content:space-between;gap:10px;padding:12px 0;border-top:1px dashed #334155}
+  .row{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px dashed #334155}
   .row:first-of-type{border-top:none}
-  .label{color:var(--muted);font-size:14px}
+  .label{color:var(--muted);font-size:clamp(12px, 1.2vw, 14px)}
 
-  /* 班：最大強調（色：班カラー／特大フォント） */
-  .value{ font-weight:var(--team-weight); font-size:var(--team-size); letter-spacing:.7px; line-height:1.1; }
+  /* 班名：最強調（特大・極太・色分け） */
+  .value{ font-weight:900; font-size:var(--team-size); letter-spacing:.7px; line-height:1.08; white-space:nowrap; }
   .team-A .value{ color:var(--A); text-shadow:0 0 10px color-mix(in oklab, var(--A) 30%, transparent); }
   .team-B .value{ color:var(--B); text-shadow:0 0 10px color-mix(in oklab, var(--B) 30%, transparent); }
   .team-C .value{ color:var(--C); text-shadow:0 0 10px color-mix(in oklab, var(--C) 30%, transparent); }
   .team-D .value{ color:var(--D); text-shadow:0 0 10px color-mix(in oklab, var(--D) 30%, transparent); }
 
-  /* 休のビジュアル（柔らかい面表現） */
-  .offbox{
-    background:linear-gradient(180deg, rgba(253,164,175,.16), rgba(253,164,175,.08));
-    border:1px solid rgba(253,164,175,.55); padding:14px; border-radius:14px;
-  }
+  /* 休カードは淡い面で */
+  .offbox{ background:linear-gradient(180deg, rgba(253,164,175,.16), rgba(253,164,175,.08));
+           border:1px solid rgba(253,164,175,.55); padding:clamp(8px, 1.2vw, 14px); border-radius:12px; }
 
-  /* ポップ時のアクセント（ほんのり彩度UP） */
-  body.theme-pop .card{ background:linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03)); }
-  body.theme-pop .btn, body.theme-pop .chip, body.theme-pop input[type="date"]{ border-radius:16px; }
-
-  /* レスポンシブ微調整 */
-  @media (max-width:720px){
-    .grid{ grid-auto-columns:minmax(280px,1fr); }
-    :root{ --team-size: 36px; --slot-size: 26px; }
-    body.theme-pop{ --team-size: 40px; --slot-size: 28px; }
+  /* 画面幅が狭いときは【スクロールなしを優先して 2×2 に自動落とす】 */
+  @media (max-width: 720px){
+    .grid{ grid-template-columns: repeat(2, 1fr); }
   }
 </style>
 </head>
-<body class="theme-modern">
+<body>
   <main class="app">
     <!-- 上：日付ダイヤル -->
     <section class="panel" aria-label="日付ダイヤル">
@@ -151,13 +124,12 @@
           <label style="display:flex;align-items:center;gap:6px">
             指定日 <input type="date" id="gotoDate" />
           </label>
-          <button class="btn" id="themeBtn" title="テーマ切替">テーマ：モダン</button>
         </div>
       </div>
       <div id="dialWheel" class="wheel" tabindex="0" aria-label="横にスクロールして日付を選択"></div>
     </section>
 
-    <!-- 下：当日の班割（横1段） -->
+    <!-- 下：当日の班割（スクロールなし・自動調整） -->
     <section class="panel" aria-label="シフト詳細">
       <div class="hdr" style="justify-content:space-between">
         <div id="selDateText" class="title">—</div>
@@ -170,7 +142,7 @@
       </div>
       <div class="grid" id="grid"></div>
       <div style="padding:10px;border-top:1px solid var(--border);color:var(--muted);font-size:12px">
-        ※ 3勤1休：Aの例＝<b>1,1,1,休,3,3,3,休,2,2,2,休</b>。基準は 2026‑02‑02（1番=B, 2番=A, 3番=D, 休=C）。初期表示は「今日」。[1](https://ubeglobal-my.sharepoint.com/personal/32607u_ube_com/_layouts/15/Doc.aspx?sourcedoc=%7B5583F174-C593-41F5-8351-0688521D8C40%7D&file=shift_2026_2035.csv&action=default&mobileredirect=true)
+        ※ 3勤1休（A例：<b>1,1,1,休,3,3,3,休,2,2,2,休</b>）。基準は 2026‑02‑02（1番=B, 2番=A, 3番=D, 休=C）。初期表示は「今日」。[1](https://ubeglobal-my.sharepoint.com/personal/32607u_ube_com/_layouts/15/Doc.aspx?sourcedoc=%7B5583F174-C593-41F5-8351-0688521D8C40%7D&file=shift_2026_2035.csv&action=default&mobileredirect=true)
       </div>
     </section>
   </main>
@@ -200,8 +172,8 @@ const toISO=(d)=>{const z=new Date(d);z.setHours(0,0,0,0);return z.toISOString()
 const fmtYmd=(d)=>`${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${dow[d.getDay()]}）`;
 
 /* ローテ基準（day0）は CSV 実績の 2026-02-02。初期表示は“今日”。 */
-const DAY0_DATE=new Date("2026-02-02T00:00:00");  // ローテ基準（変更可）
-const TODAY=new Date(); TODAY.setHours(0,0,0,0);   // 初期表示は今日
+const DAY0_DATE=new Date("2026-02-02T00:00:00");  // ローテ基準
+const TODAY=new Date(); TODAY.setHours(0,0,0,0);   // 初期表示
 
 /* 指定日のスロット→班（毎日「1・2・3・休」が一つずつ） */
 function assignmentFor(date){
@@ -224,7 +196,6 @@ const prevWeekBtn=document.getElementById('prevWeek');
 const nextWeekBtn=document.getElementById('nextWeek');
 const todayBtn=document.getElementById('todayBtn');
 const gotoDateInp=document.getElementById('gotoDate');
-const themeBtn=document.getElementById('themeBtn');
 
 /* ダイヤル描画（前後10年） */
 function renderDialAround(centerDate){
@@ -244,7 +215,7 @@ function renderDialAround(centerDate){
   }
 }
 
-/* カード描画（横1段） */
+/* カード描画（常にグリッド内に収める） */
 function renderRight(date){
   selDateText.textContent=fmtYmd(date);
   const map=assignmentFor(date);
@@ -274,7 +245,7 @@ function renderRight(date){
     <div class="offbox">
       <div style="display:flex;justify-content:space-between;align-items:center">
         <div class="label">班</div>
-        <div style="font-weight:var(--team-weight);font-size:var(--team-size);letter-spacing:.7px;color:var(--off);line-height:1.1">${offTeam}</div>
+        <div style="font-weight:900;font-size:var(--team-size);letter-spacing:.7px;line-height:1.08;color:var(--off)">${offTeam}</div>
       </div>
     </div>`;
   grid.appendChild(off);
@@ -291,26 +262,8 @@ function selectDate(d,opts={}){
   }
 }
 
-/* テーマ切替（localStorage 永続化） */
-function applyTheme(theme){
-  document.body.classList.remove('theme-modern','theme-pop');
-  const t = (theme==='pop' ? 'theme-pop' : 'theme-modern');
-  document.body.classList.add(t);
-  themeBtn.textContent = 'テーマ：' + (t==='theme-pop' ? 'ポップ' : 'モダン');
-  localStorage.setItem('shift_theme', t);
-}
-
-/* 初期化：今日を表示、テーマ復元 */
+/* 初期化：今日を表示 */
 function init(){
-  // テーマ
-  const saved = localStorage.getItem('shift_theme') || 'theme-modern';
-  applyTheme(saved==='theme-pop' ? 'pop' : 'modern');
-  themeBtn.addEventListener('click', ()=>{
-    const now = localStorage.getItem('shift_theme')==='theme-pop' ? 'modern' : 'pop';
-    applyTheme(now);
-  });
-
-  // ダイヤル & 表示
   renderDialAround(TODAY);
   selectDate(TODAY,{scrollIntoView:true});
 
@@ -333,5 +286,7 @@ init();
 </script>
 </body>
 </html>
+</html>
+
 
 
