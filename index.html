@@ -9,7 +9,6 @@
   :root{
     --bg1:#0b1020;
     --bg2:#121a33;
-    --card:#0f1730cc;
     --stroke:rgba(255,255,255,.12);
     --text:#f4f7ff;
     --muted:rgba(244,247,255,.68);
@@ -36,58 +35,27 @@
     min-height:100vh;
   }
 
-  .wrap{
-    max-width: 1100px;
-    margin: 0 auto;
-    padding: 18px 14px 26px;
-  }
+  .wrap{max-width:1100px;margin:0 auto;padding:18px 14px 26px;}
+  .top{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:14px;}
+  .title{display:flex;flex-direction:column;gap:4px;}
+  h1{margin:0;font-size:22px;letter-spacing:.02em;font-weight:900;}
+  .sub{margin:0;font-size:13px;color:var(--muted);}
 
-  /* ヘッダー */
-  .top{
-    display:flex;
-    flex-wrap:wrap;
-    gap:10px;
-    align-items:center;
-    justify-content:space-between;
-    margin-bottom: 14px;
-  }
-  .title{
-    display:flex; flex-direction:column; gap:4px;
-  }
-  h1{
-    margin:0;
-    font-size: 22px;
-    letter-spacing:.02em;
-    font-weight: 900;
-  }
-  .sub{
-    margin:0;
-    font-size: 13px;
-    color: var(--muted);
-  }
-
-  /* 操作バー */
   .bar{
-    display:flex;
-    gap:10px;
-    flex-wrap:wrap;
-    align-items:center;
+    display:flex;gap:10px;flex-wrap:wrap;align-items:center;
     background: rgba(255,255,255,.06);
     border:1px solid var(--stroke);
     border-radius: 16px;
     padding: 12px;
     backdrop-filter: blur(10px);
   }
-  .bar .label{color:var(--muted); font-weight:800; font-size:13px}
+  .bar .label{color:var(--muted);font-weight:800;font-size:13px}
   .btn{
     border:1px solid var(--stroke);
     background: rgba(15,23,48,.55);
     color:var(--text);
-    padding: 10px 12px;
-    border-radius: 12px;
-    font-size: 16px;
-    font-weight: 900;
-    cursor:pointer;
+    padding:10px 12px;border-radius:12px;
+    font-size:16px;font-weight:900;cursor:pointer;
     transition: transform .05s ease, background .15s ease;
   }
   .btn:hover{ background: rgba(15,23,48,.78); }
@@ -100,231 +68,107 @@
     border:1px solid var(--stroke);
     background: rgba(15,23,48,.55);
     color:var(--text);
-    padding: 10px 12px;
-    border-radius: 12px;
-    font-size: 16px;
-    font-weight: 900;
+    padding:10px 12px;border-radius:12px;
+    font-size:16px;font-weight:900;
   }
   .spacer{flex:1}
 
-  /* メイン日付（どん） */
   .dateHero{
-    margin-top: 14px;
-    padding: 18px 16px;
-    border-radius: 18px;
+    margin-top:14px;padding:18px 16px;border-radius:18px;
     background: rgba(255,255,255,.06);
     border: 1px solid var(--stroke);
     backdrop-filter: blur(10px);
-    position: relative;
-    overflow:hidden;
+    position: relative; overflow:hidden;
   }
   .dateHero::before{
-    content:"";
-    position:absolute; inset:-2px;
+    content:""; position:absolute; inset:-2px;
     background: linear-gradient(90deg, rgba(55,214,255,.25), rgba(167,139,250,.25), rgba(255,90,214,.22));
-    filter: blur(18px);
-    opacity:.8;
-    pointer-events:none;
+    filter: blur(18px); opacity:.8; pointer-events:none;
   }
-  .dateHeroInner{
-    position:relative;
-    display:flex;
-    flex-wrap:wrap;
-    gap:12px;
-    align-items:baseline;
-  }
-  .dateBig{
-    font-size: 44px;
-    font-weight: 1000;
-    letter-spacing:.02em;
-  }
-  .dow{
-    font-size: 22px;
-    font-weight: 1000;
-    color: var(--muted);
-  }
-  .badges{
-    margin-left:auto;
-    display:flex;
-    gap:8px;
-    align-items:center;
-    flex-wrap:wrap;
-  }
+  .dateHeroInner{position:relative;display:flex;flex-wrap:wrap;gap:12px;align-items:baseline;}
+  .dateBig{font-size:44px;font-weight:1000;letter-spacing:.02em;}
+  .dow{font-size:22px;font-weight:1000;color:var(--muted);}
+  .badges{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
   .badge{
-    padding: 7px 12px;
-    border-radius: 999px;
+    padding:7px 12px;border-radius:999px;
     border:1px solid var(--stroke);
-    font-weight: 1000;
-    font-size: 13px;
-    color: var(--muted);
+    font-weight:1000;font-size:13px;color:var(--muted);
     background: rgba(15,23,48,.55);
   }
-  .badge.today{
-    border-color: rgba(34,197,94,.55);
-    color: var(--crest);
-    background: rgba(34,197,94,.12);
-  }
-  .badge.holiday{
-    border-color: rgba(255,176,32,.55);
-    color: var(--hol);
-    background: rgba(255,176,32,.14);
-  }
-  .badge.sun{
-    border-color: rgba(255,90,90,.55);
-    color: var(--sun);
-    background: rgba(255,90,90,.14);
-  }
-  .badge.sat{
-    border-color: rgba(90,169,255,.55);
-    color: var(--sat);
-    background: rgba(90,169,255,.14);
-  }
+  .badge.today{border-color: rgba(34,197,94,.55);color: var(--crest);background: rgba(34,197,94,.12);}
+  .badge.holiday{border-color: rgba(255,176,32,.55);color: var(--hol);background: rgba(255,176,32,.14);}
+  .badge.sun{border-color: rgba(255,90,90,.55);color: var(--sun);background: rgba(255,90,90,.14);}
+  .badge.sat{border-color: rgba(90,169,255,.55);color: var(--sat);background: rgba(90,169,255,.14);}
 
-  /* サマリー（ずばっと） */
   .summary{
-    margin-top: 12px;
-    display:flex;
-    flex-wrap:wrap;
-    gap:10px;
-    align-items:center;
-    justify-content:space-between;
-    padding: 14px 16px;
-    border-radius: 18px;
-    background: rgba(15,23,48,.50);
-    border: 1px solid var(--stroke);
-    backdrop-filter: blur(10px);
+    margin-top:12px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;
+    padding:14px 16px;border-radius:18px;background: rgba(15,23,48,.50);
+    border: 1px solid var(--stroke);backdrop-filter: blur(10px);
   }
-  .summary .left{
-    display:flex;
-    flex-wrap:wrap;
-    gap:10px;
-    align-items:center;
-  }
-  .summary .label{
-    color: var(--muted);
-    font-weight: 900;
-    font-size: 13px;
-    letter-spacing:.02em;
-  }
+  .summary .left{display:flex;flex-wrap:wrap;gap:10px;align-items:center;}
+  .summary .label{color: var(--muted);font-weight:900;font-size:13px;letter-spacing:.02em;}
   .pill{
-    display:flex;
-    gap:10px;
-    align-items:baseline;
-    padding: 10px 12px;
-    border-radius: 14px;
-    border: 1px solid var(--stroke);
-    background: rgba(255,255,255,.05);
-    min-width: 170px;
+    display:flex;gap:10px;align-items:baseline;
+    padding:10px 12px;border-radius:14px;border:1px solid var(--stroke);
+    background: rgba(255,255,255,.05); min-width:170px;
   }
-  .pill .g{font-weight:1000; font-size:18px}
-  .pill .p{font-weight:1100; font-size:28px}
-  .pill .t{color:var(--muted); font-weight:900; font-size:12px}
+  .pill .g{font-weight:1000;font-size:18px}
+  .pill .p{font-weight:1100;font-size:28px}
+  .pill .t{color:var(--muted);font-weight:900;font-size:12px}
 
-  /* カード（どんどーん） */
-  .grid{
-    margin-top: 14px;
-    display:grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
-  }
+  .grid{margin-top:14px;display:grid;grid-template-columns: repeat(2, minmax(0, 1fr));gap:12px;}
   @media (max-width: 860px){
-    .grid{ grid-template-columns: 1fr; }
-    .pill{ min-width: 150px; }
-    .dateBig{ font-size: 38px; }
+    .grid{grid-template-columns:1fr;}
+    .pill{min-width:150px;}
+    .dateBig{font-size:38px;}
   }
 
   .card{
-    border-radius: 20px;
-    border: 1px solid var(--stroke);
+    border-radius:20px;border:1px solid var(--stroke);
     background: rgba(255,255,255,.06);
     backdrop-filter: blur(10px);
-    padding: 16px;
-    position: relative;
-    overflow:hidden;
+    padding:16px; position: relative; overflow:hidden;
     box-shadow: 0 14px 40px rgba(0,0,0,.28);
   }
-  .card::before{
-    content:"";
-    position:absolute; inset:-2px;
-    opacity:.55;
-    filter: blur(18px);
-    pointer-events:none;
-  }
-  .cardHeader{
-    position:relative;
-    display:flex;
-    align-items:baseline;
-    gap:10px;
-    margin-bottom: 10px;
-  }
-  .group{
-    font-size: 22px;
-    font-weight: 1100;
-    letter-spacing:.02em;
-  }
-  .groupSmall{
-    color: var(--muted);
-    font-size: 12px;
-    font-weight: 900;
-    margin-left:auto;
-  }
+  .card::before{content:"";position:absolute;inset:-2px;opacity:.55;filter: blur(18px);pointer-events:none;}
+  .cardHeader{position:relative;display:flex;align-items:baseline;gap:10px;margin-bottom:10px;}
+  .group{font-size:22px;font-weight:1100;letter-spacing:.02em;}
+  .groupSmall{color: var(--muted);font-size:12px;font-weight:900;margin-left:auto;}
+  .mainRow{position:relative;display:flex;align-items:flex-end;gap:12px;}
+  .bigPos{font-size:64px;font-weight:1200;line-height:.95;letter-spacing:.02em;}
+  .bigPos span{font-size:24px;font-weight:1100;margin-left:4px;color:var(--muted);}
+  .timeSmall{font-size:16px;font-weight:900;color:var(--muted);padding-bottom:6px;}
 
-  .mainRow{
-    position:relative;
-    display:flex;
-    align-items:flex-end;
-    gap:12px;
-  }
-  .bigPos{
-    font-size: 64px;
-    font-weight: 1200;
-    line-height: 0.95;
-    letter-spacing:.02em;
-  }
-  .bigPos span{
-    font-size: 24px;
-    font-weight: 1100;
-    margin-left: 4px;
-    color: var(--muted);
-  }
-  .timeSmall{
-    font-size: 16px;
-    font-weight: 900;
-    color: var(--muted);
-    padding-bottom: 6px;
-  }
+  .pos1::before{background: radial-gradient(700px 260px at 20% 20%, rgba(55,214,255,.55), transparent 60%);}
+  .pos2::before{background: radial-gradient(700px 260px at 20% 20%, rgba(167,139,250,.55), transparent 60%);}
+  .pos3::before{background: radial-gradient(700px 260px at 20% 20%, rgba(255,90,214,.50), transparent 60%);}
+  .posR::before{background: radial-gradient(700px 260px at 20% 20%, rgba(34,197,94,.35), transparent 60%);}
 
-  /* 役割色 */
-  .pos1::before{ background: radial-gradient(700px 260px at 20% 20%, rgba(55,214,255,.55), transparent 60%); }
-  .pos2::before{ background: radial-gradient(700px 260px at 20% 20%, rgba(167,139,250,.55), transparent 60%); }
-  .pos3::before{ background: radial-gradient(700px 260px at 20% 20%, rgba(255,90,214,.50), transparent 60%); }
-  .posR::before{ background: radial-gradient(700px 260px at 20% 20%, rgba(34,197,94,.35), transparent 60%); }
+  .pos1 .bigPos{color: var(--c1);text-shadow:0 0 24px rgba(55,214,255,.20);}
+  .pos2 .bigPos{color: var(--c2);text-shadow:0 0 24px rgba(167,139,250,.20);}
+  .pos3 .bigPos{color: var(--c3);text-shadow:0 0 24px rgba(255,90,214,.20);}
+  .posR .bigPos{color: var(--crest);text-shadow:0 0 24px rgba(34,197,94,.18);}
 
-  .pos1 .bigPos{ color: var(--c1); text-shadow: 0 0 24px rgba(55,214,255,.20); }
-  .pos2 .bigPos{ color: var(--c2); text-shadow: 0 0 24px rgba(167,139,250,.20); }
-  .pos3 .bigPos{ color: var(--c3); text-shadow: 0 0 24px rgba(255,90,214,.20); }
-  .posR .bigPos{ color: var(--crest); text-shadow: 0 0 24px rgba(34,197,94,.18); }
-
-  .foot{
-    margin-top: 12px;
-    color: var(--muted);
-    font-size: 12px;
-  }
+  .foot{margin-top:12px;color: var(--muted);font-size:12px;}
 </style>
 </head>
 
 <body>
 <div class="wrap">
-
   <div class="top">
     <div class="title">
       <h1>4班・3勤1休ローテ（三交代）</h1>
-      <p class="sub">「何日はAが2番」みたいに一発で分かる“どんどーん”表示（祝日ズレ対策済み）</p>
+      <p class="sub">「何日はAが2番」みたいに一発で分かる表示（班ズレ修正＋前日/翌日追加）</p>
     </div>
   </div>
 
   <div class="bar">
     <span class="label">日付</span>
+
+    <!-- 追加：前日/翌日 -->
+    <button class="btn" id="prev1">← 1日</button>
+    <button class="btn" id="next1">1日 →</button>
+
     <button class="btn" id="prev7">← 7日</button>
     <button class="btn primary" id="today">今日</button>
     <button class="btn" id="next7">7日 →</button>
@@ -340,21 +184,15 @@
   </div>
 
   <div class="summary" id="summary"></div>
-
   <div class="grid" id="cards"></div>
 
   <div class="foot">
     仕様：3勤1休（例：1,1,1,休,3,3,3,休,2,2,2,休）。基準は 2026‑02‑02（1番=B, 2番=A, 3番=D, 休=C）。初期表示は「今日」。[1](https://ubeglobal-my.sharepoint.com/personal/32607u_ube_com/Documents/Whiteboards/Microsoft%20Copilot%20%E3%83%81%E3%83%A3%E3%83%83%E3%83%88%20%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB/%E3%81%84%E3%81%A1%E3%81%AB%E3%81%A1%E3%81%9A%E3%82%8C.txt)
   </div>
-
 </div>
 
 <script>
-/* =========================
-   祝日ズレ対策の核心
-   - toISOString() は使わない
-   - "YYYY-MM-DD" の Date 化は new Date("...") しない
-   ========================= */
+/* ===== 祝日ズレ対策（ローカル日付固定） ===== */
 function ymdLocal(d){
   const y = d.getFullYear();
   const m = String(d.getMonth()+1).padStart(2,'0');
@@ -369,17 +207,13 @@ function addDays(d, n){
   return new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
 }
 function diffDays(a,b){
-  // 日付境界の罠回避：正午固定
   const A = new Date(a.getFullYear(), a.getMonth(), a.getDate(), 12);
   const B = new Date(b.getFullYear(), b.getMonth(), b.getDate(), 12);
   return Math.round((A - B) / 86400000);
 }
 
-/* =========================
-   祝日（ここだけ差し替え）
-   ========================= */
+/* ===== 祝日（必要なら増やす。重複してもSetで競合しない） ===== */
 const HOLIDAYS = [
-  // 例：必要に応じて増やす（CSVは気にせんでOK）
   "2026-02-11",
   "2026-02-23",
   "2026-03-20"
@@ -387,64 +221,43 @@ const HOLIDAYS = [
 const holidaySet = new Set(HOLIDAYS);
 function isHoliday(d){ return holidaySet.has(ymdLocal(d)); }
 
-/* =========================
-   ローテ設定（あなたの仕様を維持）
-   基準日：2026-02-02（1番=B,2番=A,3番=D,休=C）[1](https://ubeglobal-my.sharepoint.com/personal/32607u_ube_com/Documents/Whiteboards/Microsoft%20Copilot%20%E3%83%81%E3%83%A3%E3%83%83%E3%83%88%20%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB/%E3%81%84%E3%81%A1%E3%81%AB%E3%81%A1%E3%81%9A%E3%82%8C.txt)
-   ========================= */
+/* ===== ローテ：班ズレ修正（ここが前回の間違いを直した本体） =====
+   例の12日サイクル：1,1,1,休,3,3,3,休,2,2,2,休 [1](https://ubeglobal-my.sharepoint.com/personal/32607u_ube_com/Documents/Whiteboards/Microsoft%20Copilot%20%E3%83%81%E3%83%A3%E3%83%83%E3%83%88%20%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB/%E3%81%84%E3%81%A1%E3%81%AB%E3%81%A1%E3%81%9A%E3%82%8C.txt)
+   基準日：2026-02-02
+   基準日の割当：1番=B, 2番=A, 3番=D, 休=C [1](https://ubeglobal-my.sharepoint.com/personal/32607u_ube_com/Documents/Whiteboards/Microsoft%20Copilot%20%E3%83%81%E3%83%A3%E3%83%83%E3%83%88%20%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB/%E3%81%84%E3%81%A1%E3%81%AB%E3%81%A1%E3%81%9A%E3%82%8C.txt)
+*/
 const baseDate = parseYMDLocal("2026-02-02"); // [1](https://ubeglobal-my.sharepoint.com/personal/32607u_ube_com/Documents/Whiteboards/Microsoft%20Copilot%20%E3%83%81%E3%83%A3%E3%83%83%E3%83%88%20%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB/%E3%81%84%E3%81%A1%E3%81%AB%E3%81%A1%E3%81%9A%E3%82%8C.txt)
-const baseAssign = { "1番":"B", "2番":"A", "3番":"D", "休":"C" }; // [1](https://ubeglobal-my.sharepoint.com/personal/32607u_ube_com/Documents/Whiteboards/Microsoft%20Copilot%20%E3%83%81%E3%83%A3%E3%83%83%E3%83%88%20%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB/%E3%81%84%E3%81%A1%E3%81%AB%E3%81%A1%E3%81%9A%E3%82%8C.txt)
-const positions = ["1番","2番","3番","休"];
+const cycle = ["1","1","1","休","3","3","3","休","2","2","2","休"]; // [1](https://ubeglobal-my.sharepoint.com/personal/32607u_ube_com/Documents/Whiteboards/Microsoft%20Copilot%20%E3%83%81%E3%83%A3%E3%83%83%E3%83%88%20%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB/%E3%81%84%E3%81%A1%E3%81%AB%E3%81%A1%E3%81%9A%E3%82%8C.txt)
 
-// 3勤1休ブロック：1 → 3 → 2 を回す（例に合わせる）[1](https://ubeglobal-my.sharepoint.com/personal/32607u_ube_com/Documents/Whiteboards/Microsoft%20Copilot%20%E3%83%81%E3%83%A3%E3%83%83%E3%83%88%20%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB/%E3%81%84%E3%81%A1%E3%81%AB%E3%81%A1%E3%81%9A%E3%82%8C.txt)
-const blockKinds = ["1","3","2"];
-const timeByShift = { "1":"08:00–16:00", "2":"16:00–23:00", "3":"23:00–08:00", "休":"（休み）" };
+const baseIndexByGroup = {
+  "B": 0, // 基準日で1番 → サイクル先頭
+  "D": 4, // 基準日で3番 → "3"ブロック先頭
+  "A": 8, // 基準日で2番 → "2"ブロック先頭
+  "C": 3  // 基準日で休 → 最初の休
+}; // [1](https://ubeglobal-my.sharepoint.com/personal/32607u_ube_com/Documents/Whiteboards/Microsoft%20Copilot%20%E3%83%81%E3%83%A3%E3%83%83%E3%83%88%20%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB/%E3%81%84%E3%81%A1%E3%81%AB%E3%81%A1%E3%81%9A%E3%82%8C.txt)
 
-function workKindAt(date){
-  const dd = diffDays(date, baseDate);
-  const pos = ((dd % 4) + 4) % 4; // 0..3
-  const bi = (dd >= 0) ? Math.floor(dd / 4) : Math.floor((dd - 3) / 4);
-  const kind = blockKinds[((bi % 3) + 3) % 3];
-  return (pos === 3) ? "休" : kind;
-}
-function assignmentAt(date){
-  const dd = diffDays(date, baseDate);
-  const rot = ((dd % 4) + 4) % 4;
-  const result = {};
-  for(let i=0;i<4;i++){
-    const posFrom = positions[i];
-    const posTo   = positions[(i + rot) % 4];
-    result[posTo] = baseAssign[posFrom];
-  }
-  return result; // 位置→班
-}
+const timeByShift = {
+  "1":"08:00–16:00",
+  "2":"16:00–23:00",
+  "3":"23:00–08:00",
+  "休":"（休み）"
+};
+
+function mod(n, m){ return ((n % m) + m) % m; }
+
 function groupToShiftAt(date){
-  const kind = workKindAt(date);
-  const assign = assignmentAt(date);
-
-  // 今日のkindを起点に「1番枠の勤務」を決める
-  const orderByKind = {
-    "1":["1","2","3","休"],
-    "3":["3","1","2","休"],
-    "2":["2","3","1","休"],
-    "休":["休","休","休","休"]
-  }[kind];
-
-  const posToWork = {};
-  for(let i=0;i<4;i++) posToWork[positions[i]] = orderByKind[i];
-
+  const dd = diffDays(date, baseDate);
   const g2s = {};
-  for(const pos of positions){
-    const g = assign[pos];
-    g2s[g] = posToWork[pos];
+  for(const g of ["A","B","C","D"]){
+    const idx = mod(baseIndexByGroup[g] + dd, cycle.length);
+    g2s[g] = cycle[idx];
   }
-  return g2s; // A/B/C/D → 1/2/3/休
+  return g2s;
 }
 
-/* =========================
-   UI描画
-   ========================= */
+/* ===== UI ===== */
 const dowJP = ["日","月","火","水","木","金","土"];
-let current = new Date(); // 初期表示「今日」[1](https://ubeglobal-my.sharepoint.com/personal/32607u_ube_com/Documents/Whiteboards/Microsoft%20Copilot%20%E3%83%81%E3%83%A3%E3%83%83%E3%83%88%20%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB/%E3%81%84%E3%81%A1%E3%81%AB%E3%81%A1%E3%81%9A%E3%82%8C.txt)
+let current = new Date(); // [1](https://ubeglobal-my.sharepoint.com/personal/32607u_ube_com/Documents/Whiteboards/Microsoft%20Copilot%20%E3%83%81%E3%83%A3%E3%83%83%E3%83%88%20%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB/%E3%81%84%E3%81%A1%E3%81%AB%E3%81%A1%E3%81%9A%E3%82%8C.txt)
 
 const picker  = document.getElementById("picker");
 const hero    = document.getElementById("hero");
@@ -464,10 +277,6 @@ function posClass(s){
   if(s === "3") return "pos3";
   return "posR";
 }
-function posText(s){
-  return (s === "休") ? "休" : s;
-}
-
 function render(){
   const ymd = ymdLocal(current);
   picker.value = ymd;
@@ -475,9 +284,8 @@ function render(){
   const isToday = (ymdLocal(new Date()) === ymd);
   const badge = dayBadge(current);
 
-  const g2s = groupToShiftAt(current); // A/B/C/D → 1/2/3/休
+  const g2s = groupToShiftAt(current);
 
-  // ヘッダー（どん）
   const b1 = isToday ? `<span class="badge today">今日</span>` : ``;
   const b2 = badge ? `<span class="badge ${badge.cls}">${badge.text}</span>` : ``;
 
@@ -487,40 +295,41 @@ function render(){
     <div class="badges">${b1}${b2}</div>
   `;
 
-  // サマリー（ずばっと）
   summary.innerHTML = `
     <div class="left">
       <div class="label">今日の割当（パッと見）</div>
       ${["A","B","C","D"].map(g=>{
         const s = g2s[g];
         const t = timeByShift[s];
+        const num = (s === "休") ? "休" : s;
+        const sub = (s === "休") ? "休み" : t;
         return `
           <div class="pill">
             <div class="g">${g}班</div>
-            <div class="p">${posText(s)}<span class="t">番</span></div>
-            <div class="t">${s==="休" ? "休み" : t}</div>
+            <div class="p">${num}<span class="t">${s==="休" ? "" : "番"}</span></div>
+            <div class="t">${sub}</div>
           </div>
         `;
       }).join("")}
     </div>
   `;
 
-  // カード（どんどーん）
   cards.innerHTML = ["A","B","C","D"].map(g=>{
     const s = g2s[g];
     const cls = posClass(s);
     const time = timeByShift[s];
-    const timeLabel = (s==="休") ? "休み" : time;
-    const numLabel = (s==="休") ? "休" : `${s}`;
+    const num = (s==="休") ? "休" : s;
     const suffix = (s==="休") ? "" : `<span>番</span>`;
+    const small = (s==="休") ? "休み" : `${s}番（${time}）`;
+    const timeLabel = (s==="休") ? "休み" : time;
     return `
       <div class="card ${cls}">
         <div class="cardHeader">
           <div class="group">${g}班</div>
-          <div class="groupSmall">${s==="休" ? "休み" : `${s}番（${time}）`}</div>
+          <div class="groupSmall">${small}</div>
         </div>
         <div class="mainRow">
-          <div class="bigPos">${numLabel}${suffix}</div>
+          <div class="bigPos">${num}${suffix}</div>
           <div class="timeSmall">${timeLabel}</div>
         </div>
       </div>
@@ -528,9 +337,12 @@ function render(){
   }).join("");
 }
 
+/* 操作 */
 document.getElementById("today").onclick = ()=>{ current = new Date(); render(); };
-document.getElementById("prev7").onclick = ()=>{ current = addDays(current,-7); render(); };
-document.getElementById("next7").onclick = ()=>{ current = addDays(current,+7); render(); };
+document.getElementById("prev1").onclick = ()=>{ current = addDays(current, -1); render(); };
+document.getElementById("next1").onclick = ()=>{ current = addDays(current, +1); render(); };
+document.getElementById("prev7").onclick = ()=>{ current = addDays(current, -7); render(); };
+document.getElementById("next7").onclick = ()=>{ current = addDays(current, +7); render(); };
 picker.onchange = ()=>{ if(picker.value){ current = parseYMDLocal(picker.value); render(); } };
 
 render();
