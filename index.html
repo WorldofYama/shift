@@ -100,26 +100,10 @@
   .badge.sun{border-color: rgba(255,90,90,.55);color: var(--sun);background: rgba(255,90,90,.14);}
   .badge.sat{border-color: rgba(90,169,255,.55);color: var(--sat);background: rgba(90,169,255,.14);}
 
-  .summary{
-    margin-top:12px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;
-    padding:14px 16px;border-radius:18px;background: rgba(15,23,48,.50);
-    border: 1px solid var(--stroke);backdrop-filter: blur(10px);
-  }
-  .summary .left{display:flex;flex-wrap:wrap;gap:10px;align-items:center;}
-  .summary .label{color: var(--muted);font-weight:900;font-size:13px;letter-spacing:.02em;}
-  .pill{
-    display:flex;gap:10px;align-items:baseline;
-    padding:10px 12px;border-radius:14px;border:1px solid var(--stroke);
-    background: rgba(255,255,255,.05); min-width:170px;
-  }
-  .pill .g{font-weight:1000;font-size:18px}
-  .pill .p{font-weight:1100;font-size:28px}
-  .pill .t{color:var(--muted);font-weight:900;font-size:12px}
-
+  /* カードのみ（余計な帯は無し） */
   .grid{margin-top:14px;display:grid;grid-template-columns: repeat(2, minmax(0, 1fr));gap:12px;}
   @media (max-width: 860px){
     .grid{grid-template-columns:1fr;}
-    .pill{min-width:150px;}
     .dateBig{font-size:38px;}
   }
 
@@ -148,8 +132,6 @@
   .pos2 .bigPos{color: var(--c2);text-shadow:0 0 24px rgba(167,139,250,.20);}
   .pos3 .bigPos{color: var(--c3);text-shadow:0 0 24px rgba(255,90,214,.20);}
   .posR .bigPos{color: var(--crest);text-shadow:0 0 24px rgba(34,197,94,.18);}
-
-  .foot{margin-top:12px;color: var(--muted);font-size:12px;}
 </style>
 </head>
 
@@ -158,7 +140,7 @@
   <div class="top">
     <div class="title">
       <h1>4班・3勤1休ローテ（三交代）</h1>
-      <p class="sub">祝日ズレ対策済み／地獄（休み同時多発）回避／操作は「←7日 ←1日 今日 1日→ 7日→」</p>
+      <p class="sub">カードを見れば「Aが何番か」一発で分かる</p>
     </div>
   </div>
 
@@ -168,9 +150,7 @@
     <!-- 並び：←7日、←1日、今日、1日→、7日→ -->
     <button class="btn" id="prev7">← 7日</button>
     <button class="btn" id="prev1">← 1日</button>
-
     <button class="btn primary" id="today">今日</button>
-
     <button class="btn" id="next1">1日 →</button>
     <button class="btn" id="next7">7日 →</button>
 
@@ -184,20 +164,12 @@
     <div class="dateHeroInner" id="hero"></div>
   </div>
 
-  <div class="summary" id="summary"></div>
+  <!-- サマリー帯は削除。カードだけ。 -->
   <div class="grid" id="cards"></div>
-
-  <div class="foot">
-    仕様：3勤1休（例：1,1,1,休,3,3,3,休,2,2,2,休）。基準は 2026‑02‑02（1番=B, 2番=A, 3番=D, 休=C）。初期表示は「今日」。[1](https://ubeglobal-my.sharepoint.com/personal/32607u_ube_com/Documents/Whiteboards/Microsoft%20Copilot%20%E3%83%81%E3%83%A3%E3%83%83%E3%83%88%20%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB/%E3%81%84%E3%81%A1%E3%81%AB%E3%81%A1%E3%81%9A%E3%82%8C.txt)
-  </div>
 </div>
 
 <script>
-/* =========================
-   祝日ズレ対策：ローカル日付固定
-   - toISOString()は使わない
-   - "YYYY-MM-DD" を new Date("...") で作らない
-   ========================= */
+/* ===== 日付（ローカル固定：表示上の説明は出さない） ===== */
 function ymdLocal(d){
   const y = d.getFullYear();
   const m = String(d.getMonth()+1).padStart(2,'0');
@@ -206,24 +178,21 @@ function ymdLocal(d){
 }
 function parseYMDLocal(s){
   const [y,m,d] = s.split('-').map(Number);
-  return new Date(y, m-1, d); // ローカル00:00
+  return new Date(y, m-1, d);
 }
 function addDays(d, n){
   return new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
 }
 function diffDays(a,b){
-  // 日付境界の罠回避：正午固定
   const A = new Date(a.getFullYear(), a.getMonth(), a.getDate(), 12);
   const B = new Date(b.getFullYear(), b.getMonth(), b.getDate(), 12);
   return Math.round((A - B) / 86400000);
 }
 function mod(n, m){ return ((n % m) + m) % m; }
 
-/* =========================
-   祝日（ここを差し替え）
-   ========================= */
+/* ===== 祝日（必要なら差し替え。表示はバッジのみ） ===== */
 const HOLIDAYS = [
-  // 例（必要に応じて追加）
+  // 例：必要に応じて追加
   "2026-02-11",
   "2026-02-23",
   "2026-03-20"
@@ -231,25 +200,16 @@ const HOLIDAYS = [
 const holidaySet = new Set(HOLIDAYS);
 function isHoliday(d){ return holidaySet.has(ymdLocal(d)); }
 
-/* =========================
-   ローテ仕様（あなたの仕様に準拠）[1](https://ubeglobal-my.sharepoint.com/personal/32607u_ube_com/Documents/Whiteboards/Microsoft%20Copilot%20%E3%83%81%E3%83%A3%E3%83%83%E3%83%88%20%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB/%E3%81%84%E3%81%A1%E3%81%AB%E3%81%A1%E3%81%9A%E3%82%8C.txt)
-   サイクル：1,1,1,休,3,3,3,休,2,2,2,休
-   基準日：2026-02-02
-   基準日の割当：1番=B、2番=A、3番=D、休=C
-   ========================= */
+/* ===== ローテ（基準：2026-02-02 で 1番=B 2番=A 3番=D 休=C） [1](https://ubeglobal-my.sharepoint.com/personal/32607u_ube_com/Documents/Whiteboards/Microsoft%20Copilot%20%E3%83%81%E3%83%A3%E3%83%83%E3%83%88%20%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB/%E3%81%84%E3%81%A1%E3%81%AB%E3%81%A1%E3%81%9A%E3%82%8C.txt) ===== */
 const baseDate = parseYMDLocal("2026-02-02"); // [1](https://ubeglobal-my.sharepoint.com/personal/32607u_ube_com/Documents/Whiteboards/Microsoft%20Copilot%20%E3%83%81%E3%83%A3%E3%83%83%E3%83%88%20%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB/%E3%81%84%E3%81%A1%E3%81%AB%E3%81%A1%E3%81%9A%E3%82%8C.txt)
 const cycle = ["1","1","1","休","3","3","3","休","2","2","2","休"]; // [1](https://ubeglobal-my.sharepoint.com/personal/32607u_ube_com/Documents/Whiteboards/Microsoft%20Copilot%20%E3%83%81%E3%83%A3%E3%83%83%E3%83%88%20%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB/%E3%81%84%E3%81%A1%E3%81%AB%E3%81%A1%E3%81%9A%E3%82%8C.txt)
 
-/* ★重要：地獄回避の開始インデックス
-   - 休（index 3,7,11）は 3 mod 4 に現れる
-   - 開始位置の mod 4 が全班で被ると休みが同時多発する
-   - ここは UI と関係ないので「ここだけ」がロジック要所
-*/
+/* 地獄回避の開始位置（同時休み多発を防ぐ） */
 const baseIndexByGroup = {
   "B": 0,  // 1番
-  "A": 9,  // 2番（mod1）
-  "D": 6,  // 3番（mod2）
-  "C": 3   // 休  （mod3）
+  "A": 9,  // 2番
+  "D": 6,  // 3番
+  "C": 3   // 休
 };
 
 const timeByShift = {
@@ -269,15 +229,12 @@ function groupToShiftAt(date){
   return g2s;
 }
 
-/* =========================
-   UI
-   ========================= */
+/* ===== UI ===== */
 const dowJP = ["日","月","火","水","木","金","土"];
-let current = new Date(); // 初期表示「今日」[1](https://ubeglobal-my.sharepoint.com/personal/32607u_ube_com/Documents/Whiteboards/Microsoft%20Copilot%20%E3%83%81%E3%83%A3%E3%83%83%E3%83%88%20%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB/%E3%81%84%E3%81%A1%E3%81%AB%E3%81%A1%E3%81%9A%E3%82%8C.txt)
+let current = new Date();
 
 const picker  = document.getElementById("picker");
 const hero    = document.getElementById("hero");
-const summary = document.getElementById("summary");
 const cards   = document.getElementById("cards");
 
 function dayBadge(d){
@@ -299,7 +256,6 @@ function render(){
 
   const isToday = (ymdLocal(new Date()) === ymd);
   const badge = dayBadge(current);
-
   const g2s = groupToShiftAt(current);
 
   const b1 = isToday ? `<span class="badge today">今日</span>` : ``;
@@ -309,25 +265,6 @@ function render(){
     <div class="dateBig">${ymd}</div>
     <div class="dow">（${dowJP[current.getDay()]}）</div>
     <div class="badges">${b1}${b2}</div>
-  `;
-
-  summary.innerHTML = `
-    <div class="left">
-      <div class="label">今日の割当（パッと見）</div>
-      ${["A","B","C","D"].map(g=>{
-        const s = g2s[g];
-        const t = timeByShift[s];
-        const num = (s === "休") ? "休" : s;
-        const sub = (s === "休") ? "休み" : t;
-        return `
-          <div class="pill">
-            <div class="g">${g}班</div>
-            <div class="p">${num}<span class="t">${s==="休" ? "" : "番"}</span></div>
-            <div class="t">${sub}</div>
-          </div>
-        `;
-      }).join("")}
-    </div>
   `;
 
   cards.innerHTML = ["A","B","C","D"].map(g=>{
@@ -353,7 +290,7 @@ function render(){
   }).join("");
 }
 
-/* 操作（並びのIDに合わせて） */
+/* 操作 */
 document.getElementById("today").onclick = ()=>{ current = new Date(); render(); };
 document.getElementById("prev1").onclick = ()=>{ current = addDays(current, -1); render(); };
 document.getElementById("next1").onclick = ()=>{ current = addDays(current, +1); render(); };
