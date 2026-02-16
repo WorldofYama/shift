@@ -1,318 +1,452 @@
 <!doctype html>
 <html lang="ja">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>4班・3勤1休ローテ（三交代／スクロールなし特大フォント／土日祝色分け）</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>4班・3勤1休ローテ</title>
+  <style>
+    :root{
+      --bg:#0b0f14;
+      --panel:#111826;
+      --text:#e8eef7;
+      --muted:#9aa8ba;
+      --accent:#46b1ff;
+      --sun:#ff5a5a;
+      --sat:#5aa9ff;
+      --holiday:#ffb020;
+      --today:#22c55e;
+      --border:rgba(255,255,255,.08);
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0; background:var(--bg); color:var(--text);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Noto Sans JP", "Hiragino Sans", "Yu Gothic", sans-serif;
+      line-height:1.25;
+    }
+    .wrap{
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 18px 14px 24px;
+    }
+    h1{
+      margin: 0 0 10px;
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing:.02em;
+    }
+    .sub{
+      margin: 0 0 16px;
+      color:var(--muted);
+      font-size: 14px;
+    }
 
-<style>
-  :root{
-    /* ========= 可変サイズ ========= */
-    --slot-size: clamp(22px, 2.2vw, 34px);
-    --team-size: clamp(28px, 3.2vw, 46px);
-    --card-pad: clamp(10px, 1.6vw, 18px);
-    --grid-gap: clamp(8px, 1.2vw, 14px);
+    .toolbar{
+      display:flex; flex-wrap:wrap; gap:10px;
+      background:var(--panel);
+      border:1px solid var(--border);
+      padding:12px;
+      border-radius:12px;
+      align-items:center;
+    }
+    .toolbar .label{color:var(--muted); font-size:13px}
+    .toolbar input[type="date"]{
+      background:#0f1624; color:var(--text);
+      border:1px solid var(--border);
+      border-radius:10px;
+      padding:10px 12px;
+      font-size:16px;
+    }
+    .btn{
+      background:#0f1624; color:var(--text);
+      border:1px solid var(--border);
+      border-radius:10px;
+      padding:10px 12px;
+      font-size:16px;
+      cursor:pointer;
+    }
+    .btn:active{transform: translateY(1px)}
+    .btn.primary{border-color: rgba(70,177,255,.5)}
+    .btn.primary:hover{background: rgba(70,177,255,.08)}
+    .spacer{flex:1}
+    .note{
+      color:var(--muted);
+      font-size:12px;
+      white-space:nowrap;
+    }
 
-    /* カラー */
-    --bg:#0a0f1c; --panel:#0c1528; --card:rgba(18,26,44,.6);
-    --text:#f1f5f9; --muted:#94a3b8; --surface:#0e1830;
-    --today:#f59e0b; --off:#fda4af; --border:#1f2a44;
+    /* 大きく表示（スクロールなし想定） */
+    .grid{
+      margin-top: 14px;
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    @media (max-width: 860px){
+      .grid{grid-template-columns:1fr}
+    }
+    .card{
+      background:var(--panel);
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:16px;
+    }
+    .dateRow{
+      display:flex; align-items:baseline; gap:10px;
+      margin-bottom: 8px;
+    }
+    .dateBig{
+      font-size: 40px;
+      font-weight: 900;
+      letter-spacing:.02em;
+    }
+    .dow{
+      font-size: 18px;
+      font-weight: 800;
+      color:var(--muted);
+    }
+    .badge{
+      margin-left:auto;
+      font-size: 13px;
+      font-weight: 800;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border:1px solid var(--border);
+      color: var(--muted);
+    }
+    .badge.today{
+      border-color: rgba(34,197,94,.5);
+      color: var(--today);
+      background: rgba(34,197,94,.08);
+    }
+    .badge.holiday{
+      border-color: rgba(255,176,32,.5);
+      color: var(--holiday);
+      background: rgba(255,176,32,.10);
+    }
 
-    /* 班カラー（ビビッド） */
-    --A:#22d3ee;  --B:#a78bfa;  --C:#34d399;  --D:#fbbf24;
-
-    /* 効果 */
-    --blur: 12px;
-    --elev: 0 10px 25px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.04);
-    --glow: 0 0 0 1px rgba(148,163,184,.08);
-  }
-
-  html,body{height:100%;margin:0;color:var(--text);
-    font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Noto Sans JP","Hiragino Kaku Gothic ProN",Meiryo,sans-serif;
-    background:radial-gradient(1200px 800px at 10% -10%, #1e293b 0%, var(--bg) 50%),
-               radial-gradient(1200px 800px at 110% 110%, #0b3a5b 0%, var(--bg) 50%);}
-  body:after{
-    content:""; position:fixed; inset:0; pointer-events:none;
-    background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" fill="none"><path d="M40 0v80M0 40h80" stroke="rgba(255,255,255,0.02)" stroke-width="1"/></svg>');
-    background-size:80px 80px; mix-blend-mode:overlay; opacity:.8;
-  }
-
-  .app{min-height:100vh;display:grid;grid-template-rows:auto 1fr;gap:var(--grid-gap);padding:clamp(10px, 2vw, 16px);}
-  .panel{
-    background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
-    border:1px solid var(--border); border-radius:16px; overflow:hidden; backdrop-filter:blur(10px);
-    box-shadow:var(--glow), var(--elev);
-  }
-
-  /* 上：日付ダイヤル */
-  .hdr{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--border);
-       background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,0));}
-  .title{font-weight:900;font-size:clamp(16px, 1.6vw, 19px);letter-spacing:.3px}
-  .controls{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
-  .btn,.chip,input[type="date"]{
-    background:var(--surface); color:var(--text); border:1px solid #334155; border-radius:12px; padding:8px 12px; font-weight:700;
-  }
-  .btn:hover{border-color:#3b82f6; color:#93c5fd}
-  input[type="date"]{padding:7px 12px;}
-
-  .wheel{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(120px,1fr);gap:12px;overflow:auto;padding:12px;scroll-snap-type:x mandatory}
-  .day{
-    scroll-snap-align:center; display:grid; gap:6px; place-items:center; padding:12px 10px;
-    border:1px solid var(--border); border-radius:14px; background:var(--card);
-    backdrop-filter:blur(var(--blur)); box-shadow:var(--glow);
-    min-height:88px; cursor:pointer; transition:transform .12s ease, border-color .15s ease, background-color .15s ease;
-  }
-  .day:hover{ transform:translateY(-2px); border-color:#375079; }
-  .ymd{font-weight:900; letter-spacing:.2px; font-size:clamp(14px, 1.4vw, 16px)}
-  .dow,.tag{font-size:12px; color:var(--muted)}
-  .today{ outline:2px solid var(--today); outline-offset:-2px; background:linear-gradient(180deg, rgba(245,158,11,.12), transparent), var(--card); }
-  .selected{ border-color:#60a5fa; box-shadow:0 0 0 1px rgba(96,165,250,.6) inset, var(--glow); }
-
-  /* ===== 土日祝の色替え（文字色と背景のごく薄い色） ===== */
-  .day.sun .ymd, .day.sun .dow { color:#fca5a5; }             /* 日曜：赤系 */
-  .day.sun{ background:linear-gradient(180deg, rgba(252,165,165,.12), transparent), var(--card); }
-
-  .day.sat .ymd, .day.sat .dow { color:#93c5fd; }             /* 土曜：青系 */
-  .day.sat{ background:linear-gradient(180deg, rgba(147,197,253,.12), transparent), var(--card); }
-
-  .day.holiday .ymd, .day.holiday .dow { color:#f9a8d4; }      /* 祝日：ピンク系 */
-  .day.holiday{ background:linear-gradient(180deg, rgba(249,168,212,.14), transparent), var(--card); }
-
-  /* 下：当日の班割（スクロールなし） */
-  .grid{
-    display:grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap:var(--grid-gap);
-    padding:var(--grid-gap);
-    overflow:visible;
-    align-items:stretch;
-  }
-  .card{
-    background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
-    border:1px solid var(--border); border-radius:16px; padding:var(--card-pad);
-    min-height:clamp(120px, 18vh, 180px);
-    backdrop-filter:blur(var(--blur)); box-shadow:var(--glow), var(--elev);
-  }
-  .card h3{ margin:0 0 8px; font-size:var(--slot-size); font-weight:900; letter-spacing:.5px; }
-  .row{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-top:1px dashed #334155}
-  .row:first-of-type{border-top:none}
-  .label{color:var(--muted);font-size:clamp(12px, 1.2vw, 14px)}
-  .value{ font-weight:900; font-size:var(--team-size); letter-spacing:.7px; line-height:1.08; white-space:nowrap; }
-
-  .team-A .value{ color:var(--A); text-shadow:0 0 10px color-mix(in oklab, var(--A) 30%, transparent); }
-  .team-B .value{ color:var(--B); text-shadow:0 0 10px color-mix(in oklab, var(--B) 30%, transparent); }
-  .team-C .value{ color:var(--C); text-shadow:0 0 10px color-mix(in oklab, var(--C) 30%, transparent); }
-  .team-D .value{ color:var(--D); text-shadow:0 0 10px color-mix(in oklab, var(--D) 30%, transparent); }
-
-  .offbox{ background:linear-gradient(180deg, rgba(253,164,175,.16), rgba(253,164,175,.08));
-           border:1px solid rgba(253,164,175,.55); padding:clamp(8px, 1.2vw, 14px); border-radius:12px; }
-
-  @media (max-width: 720px){
-    .grid{ grid-template-columns: repeat(2, 1fr); }
-  }
-</style>
+    .shiftRow{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .shiftBox{
+      border:1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 14px;
+      background: rgba(0,0,0,.12);
+    }
+    .shiftName{
+      font-size: 18px;
+      font-weight: 900;
+      margin-bottom: 8px;
+      color: var(--muted);
+    }
+    .shiftVal{
+      font-size: 32px;
+      font-weight: 1000;
+      letter-spacing:.02em;
+    }
+    .legend{
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .legend b{color:var(--text)}
+    .colorSun{color:var(--sun)}
+    .colorSat{color:var(--sat)}
+    .colorHol{color:var(--holiday)}
+  </style>
 </head>
 <body>
-  <main class="app">
-    <!-- 上：日付ダイヤル -->
-    <section class="panel" aria-label="日付ダイヤル">
-      <div class="hdr">
-        <div class="title">日付</div>
-        <div class="controls" role="group" aria-label="操作">
-          <button class="btn" id="prevWeek" title="前へ7日">← 7日</button>
-          <button class="btn" id="todayBtn" title="今日へ">今日</button>
-          <button class="btn" id="nextWeek" title="次へ7日">7日 →</button>
-          <label style="display:flex;align-items:center;gap:6px">
-            指定日 <input type="date" id="gotoDate" />
-          </label>
-        </div>
-      </div>
-      <div id="dialWheel" class="wheel" tabindex="0" aria-label="横にスクロールして日付を選択"></div>
-    </section>
+  <div class="wrap">
+    <h1>4班・3勤1休ローテ（三交代）</h1>
+    <p class="sub">
+      3勤1休（例：1,1,1,休,3,3,3,休,2,2,2,休）。基準日 2026-02-02（1番=B, 2番=A, 3番=D, 休=C）。初期表示は「今日」。[1](https://ubeglobal-my.sharepoint.com/personal/32607u_ube_com/Documents/Whiteboards/Microsoft%20Copilot%20%E3%83%81%E3%83%A3%E3%83%83%E3%83%88%20%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB/%E3%81%84%E3%81%A1%E3%81%AB%E3%81%A1%E3%81%9A%E3%82%8C.txt)
+    </p>
 
-    <!-- 下：当日の班割 -->
-    <section class="panel" aria-label="シフト詳細">
-      <div class="hdr" style="justify-content:space-between">
-        <div id="selDateText" class="title">—</div>
-        <div class="controls" style="margin-left:0">
-          <span class="chip" style="cursor:default">1番 08:00–16:00</span>
-          <span class="chip" style="cursor:default">2番 16:00–23:00</span>
-          <span class="chip" style="cursor:default">3番 23:00–08:00</span>
-          <span class="chip" style="cursor:default;color:var(--off);border-color:var(--off)">休</span>
-        </div>
-      </div>
-      <div class="grid" id="grid"></div>
-      <div style="padding:10px;border-top:1px solid var(--border);color:var(--muted);font-size:12px">
-        ※ 3勤1休（A例：<b>1,1,1,休,3,3,3,休,2,2,2,休</b>）。基準は 2026‑02‑02（1番=B, 2番=A, 3番=D, 休=C）。初期表示は「今日」。[1](https://ubeglobal-my.sharepoint.com/personal/32607u_ube_com/_layouts/15/Doc.aspx?sourcedoc=%7B5583F174-C593-41F5-8351-0688521D8C40%7D&file=shift_2026_2035.csv&action=default&mobileredirect=true)
-      </div>
-    </section>
-  </main>
+    <div class="toolbar">
+      <span class="label">日付</span>
+      <button class="btn" id="prev7">← 7日</button>
+      <button class="btn primary" id="todayBtn">今日</button>
+      <button class="btn" id="next7">7日 →</button>
+
+      <span class="spacer"></span>
+
+      <span class="label">指定日</span>
+      <input type="date" id="picker" />
+      <span class="note" id="tzNote"></span>
+    </div>
+
+    <div class="grid">
+      <div class="card" id="cardMain"></div>
+      <div class="card" id="cardNext"></div>
+    </div>
+
+    <div class="legend">
+      色：<span class="colorSun"><b>日</b></span> / <span class="colorSat"><b>土</b></span> / <span class="colorHol"><b>祝</b></span>（祝日は土日より優先で表示）
+    </div>
+  </div>
 
 <script>
-/* ===== 3勤1休ローテ（12日周期） ===== */
-const CYCLE = ["1","1","1","休","3","3","3","休","2","2","2","休"];
-const PERIOD = CYCLE.length;
-/* 基準日に 1番=B, 2番=A, 3番=D, 休=C を満たす位相（δ=0,3,6,9） */
-const PHASE = { A:9, B:0, C:3, D:6 };
+/* =========================
+   重要：日付処理（ズレ防止）
+   - toISOString() を使わない
+   - new Date("YYYY-MM-DD") を使わない
+   ========================= */
 
-/* スロット（番） */
-const SLOTS = {
-  "1": { name:"1番", time:"08:00–16:00" },
-  "2": { name:"2番", time:"16:00–23:00" },
-  "3": { name:"3番", time:"23:00–08:00" },
-  "休": { name:"休",  time:"—" }
-};
-/* 班→色クラス（班名の値に適用） */
-const TEAM_CLASS = { A:"team-A", B:"team-B", C:"team-C", D:"team-D" };
+// ローカルで YYYY-MM-DD を作る（祝日突合のキーに使う）
+function ymdLocal(d){
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
 
-/* --- 祝日設定：YYYY-MM-DD を好きに追加（例は一部のみ） --- */
-const HOLIDAYS_JP = new Set([
-  "2026-01-01", // 元日
-  "2026-02-11", // 建国記念の日
-  "2026-02-23", // 天皇誕生日
-  "2026-03-20", // 春分の日（例）
-  "2026-04-29", // 昭和の日
-  "2026-05-03", // 憲法記念日
-  "2026-05-04", // みどりの日
-  "2026-05-05", // こどもの日
-  "2026-07-20", // 海の日（例）
-  "2026-08-11", // 山の日
-  "2026-09-21", // 敬老の日（例）
-  "2026-09-22", // 国民の休日（例）
-  "2026-09-23", // 秋分の日（例）
-  "2026-10-12", // スポーツの日（例）
-  "2026-11-03", // 文化の日
-  "2026-11-23", // 勤労感謝の日
-  // 必要に応じて 2027年以降も追記してください
+// "YYYY-MM-DD" をローカル日付として作る（UTC解釈を避ける）
+function parseYMDLocal(s){
+  const [y,m,d] = s.split('-').map(Number);
+  return new Date(y, m-1, d); // ローカル 00:00
+}
+
+// 日の加算（ローカル日付で安定）
+function addDaysLocal(d, days){
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate() + days);
+}
+
+// 「日単位差分」を安全に（正午固定で境界の罠回避）
+function diffDaysLocal(a, b){
+  const A = new Date(a.getFullYear(), a.getMonth(), a.getDate(), 12);
+  const B = new Date(b.getFullYear(), b.getMonth(), b.getDate(), 12);
+  return Math.round((A - B) / 86400000);
+}
+
+/* =========================
+   祝日データ（例）
+   - 必要なら増やしてください
+   - 祝日キーは "YYYY-MM-DD" 文字列で統一
+   ========================= */
+const holidaySet = new Set([
+  // 2026（例：一部）
+  "2026-01-01",
+  "2026-01-12",
+  "2026-02-11",
+  "2026-02-23",
+  "2026-03-20",
+  "2026-04-29",
+  "2026-05-03",
+  "2026-05-04",
+  "2026-05-05",
+  "2026-07-20",
+  "2026-09-21",
+  "2026-09-22",
+  "2026-10-12",
+  "2026-11-03",
+  "2026-11-23"
 ]);
-const isHoliday = (d) => HOLIDAYS_JP.has(toISO(d));
 
-/* 日付ユーティリティ */
-const dow=["日","月","火","水","木","金","土"];
-const addDays=(d,n)=>{const x=new Date(d);x.setDate(x.getDate()+n);x.setHours(0,0,0,0);return x;}
-const diffDays=(a,b)=>Math.floor((a-b)/(1000*60*60*24));
-const toISO=(d)=>{const z=new Date(d);z.setHours(0,0,0,0);return z.toISOString().slice(0,10);}
-const fmtYmd=(d)=>`${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${dow[d.getDay()]}）`;
+function isHoliday(d){
+  return holidaySet.has(ymdLocal(d));
+}
 
-/* ローテ基準（day0）は CSV 実績の 2026-02-02。初期表示は“今日”。 */
-const DAY0_DATE=new Date("2026-02-02T00:00:00");  // ローテ基準
-const TODAY=new Date(); TODAY.setHours(0,0,0,0);   // 初期表示
+/* =========================
+   ローテ設定（要件）
+   基準：2026-02-02（1番=B, 2番=A, 3番=D, 休=C）
+   3勤1休：勤務種別は 1→休→3→休→2→休 …（各3日ずつ）
+   班の割り当ては日ごとに 4班が順繰り
+   ========================= */
+const baseDate = parseYMDLocal("2026-02-02"); // ←UTCズレ回避
+const groupNames = ["A","B","C","D"];
 
-/* 指定日のスロット→班（毎日「1・2・3・休」が一つずつ） */
-function assignmentFor(date){
-  const n=((diffDays(date,DAY0_DATE)%PERIOD)+PERIOD)%PERIOD;
-  const symbolOfTeam={};
-  Object.keys(PHASE).forEach(team=>{
-    const idx=(n+PHASE[team])%PERIOD;
-    symbolOfTeam[team]=CYCLE[idx];
-  });
-  const result={"1":null,"2":null,"3":null,"休":null};
-  Object.entries(symbolOfTeam).forEach(([team,sym])=>{ result[sym]=team; });
+// 基準日の割当：1番=B, 2番=A, 3番=D, 休=C
+const baseAssign = { "1番":"B", "2番":"A", "3番":"D", "休":"C" };
+
+// 勤務種別サイクル（4日周期）：[1,1,1,休, 3,3,3,休, 2,2,2,休] …を4日単位で表現
+// ここでは「ブロック単位（4日）」として 1→3→2 を回す
+const blockKinds = ["1", "3", "2"]; // それぞれ 3勤 + 休 で4日ブロック
+const shiftLabel = {
+  "1": "08:00–16:00",
+  "2": "16:00–23:00",
+  "3": "23:00–08:00",
+  "休": "休"
+};
+
+// n日後の勤務種別（1/2/3/休）
+function workKindAt(date){
+  const dd = diffDaysLocal(date, baseDate);
+  const pos = ((dd % 4) + 4) % 4;         // 0..3
+  const blockIndex = Math.floor(dd / 4);  // ブロック番号（負もあり）
+  // JSの負のfloor対応
+  const bi = (dd >= 0) ? blockIndex : Math.floor((dd - 3) / 4);
+
+  // どのブロックか（1→3→2…）
+  const kind = blockKinds[((bi % 3) + 3) % 3];
+  if(pos === 3) return "休";
+  return kind;
+}
+
+// 班の回り方（4班が毎日 1番→2番→3番→休 の「位置」を1つ進む想定）
+// 基準日の位置： {1番:B, 2番:A, 3番:D, 休:C} を、日数だけ「位置」を回転
+const positions = ["1番","2番","3番","休"];
+function assignmentAt(date){
+  const dd = diffDaysLocal(date, baseDate);
+  const rot = ((dd % 4) + 4) % 4;
+
+  // posをrotだけ進める（例：翌日は 1番にいた班が2番へ…）
+  const result = {};
+  for(let i=0;i<4;i++){
+    const posFrom = positions[i];
+    const posTo = positions[(i + rot) % 4];
+    result[posTo] = baseAssign[posFrom];
+  }
   return result;
 }
 
-/* 画面要素 */
-const dialWheel=document.getElementById('dialWheel');
-const selDateText=document.getElementById('selDateText');
-const grid=document.getElementById('grid');
-const prevWeekBtn=document.getElementById('prevWeek');
-const nextWeekBtn=document.getElementById('nextWeek');
-const todayBtn=document.getElementById('todayBtn');
-const gotoDateInp=document.getElementById('gotoDate');
+// 班ごとの「今日の勤務表示」を作る
+function buildShiftView(date){
+  const kind = workKindAt(date);
+  const assign = assignmentAt(date); // 位置→班
 
-/* ダイヤル描画（前後10年） */
-function renderDialAround(centerDate){
-  dialWheel.innerHTML="";
-  const span=3650;
-  for(let i=-span;i<=span;i++){
-    const d=addDays(centerDate,i);
-    const cls = [];
-    if(isHoliday(d)) cls.push('holiday');       // 祝日優先
-    else if(d.getDay() === 0) cls.push('sun');  // 日曜
-    else if(d.getDay() === 6) cls.push('sat');  // 土曜
+  // 各位置（1番/2番/3番/休）に対して、今日の勤務種別kindを当てはめる…のではなく
+  // “位置=勤務”なので、kindは「どの勤務(1/2/3)が3日連続か」の概念。
+  // ここでは「1番/2番/3番/休」は固定で、表示は shiftLabel のとおり。
+  // ただし「3勤1休の切替」を反映するため、今日のkindで “1番/2番/3番” を入れ替える方式もあるが、
+  // 元文の例に合わせ、勤務種別の流れ自体（1→3→2）を “担当位置の意味” として扱う。
+  //
+  // つまり：今日の「1番枠」は kind の時間帯、明日も同じ、3日後に休、次のブロックで「1番枠」が次の時間帯…という見立て。
+  const map = {};
+  // 今日のkindを「1番」に割り当て、残りは順に2/3、休は休。
+  // kindが"1"なら {1番:1,2番:2,3番:3,休:休}
+  // kindが"3"なら {1番:3,2番:1,3番:2,休:休} のように回す
+  const orderByKind = {
+    "1": ["1","2","3","休"],
+    "3": ["3","1","2","休"],
+    "2": ["2","3","1","休"],
+    "休": ["休","休","休","休"]
+  }[kind];
 
-    const b=document.createElement('button');
-    b.className='day'+(toISO(d)===toISO(TODAY) ? ' today':'')+(cls.length? ' '+cls.join(' ') : '');
-    b.setAttribute('data-date',toISO(d));
-    b.innerHTML=`
-      <div class="ymd">${d.getMonth()+1}/${d.getDate()}</div>
-      <div class="dow">${dow[d.getDay()]}</div>
-      <div class="tag">${isHoliday(d) ? '祝日' : d.getFullYear()}</div>`;
-    b.addEventListener('click',()=>selectDate(d,{scrollIntoView:true}));
-    dialWheel.appendChild(b);
+  for(let i=0;i<4;i++){
+    const pos = positions[i];
+    map[pos] = orderByKind[i];
   }
+
+  // 班ごとに最終表示（班→勤務）
+  const groupToWork = {};
+  for(const pos of positions){
+    const g = assign[pos];
+    groupToWork[g] = map[pos];
+  }
+
+  return { kind, assign, groupToWork };
 }
 
-/* カード描画（常に4枚を1画面内に収める） */
-function renderRight(date){
-  selDateText.textContent=fmtYmd(date);
-  const map=assignmentFor(date);
-  grid.innerHTML="";
+/* =========================
+   UI 描画
+   ========================= */
+const dowJP = ["日","月","火","水","木","金","土"];
 
-  const makeCard=(sym)=>{
-    const team=map[sym];
-    const card=document.createElement('div');
-    card.className=`card ${TEAM_CLASS[team]||""}`;
-    card.innerHTML=`
-      <h3>${SLOTS[sym].name}</h3>
-      <div class="row"><div class="label">班</div><div class="value">${team}</div></div>
-      <div class="row"><div class="label">時刻</div><div>${SLOTS[sym].time}</div></div>`;
-    return card;
-  };
+function dayClass(date){
+  if(isHoliday(date)) return "holiday";
+  const dow = date.getDay();
+  if(dow === 0) return "sun";
+  if(dow === 6) return "sat";
+  return "wd";
+}
 
-  grid.appendChild(makeCard("1"));
-  grid.appendChild(makeCard("2"));
-  grid.appendChild(makeCard("3"));
+function renderCard(el, date, title){
+  const ymd = ymdLocal(date);
+  const dow = dowJP[date.getDay()];
+  const today = ymdLocal(new Date()) === ymd;
+  const hol = isHoliday(date);
 
-  // 休
-  const offTeam=map["休"];
-  const off=document.createElement('div');
-  off.className='card';
-  off.innerHTML=`
-    <h3>休</h3>
-    <div class="offbox">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <div class="label">班</div>
-        <div style="font-weight:900;font-size:var(--team-size);letter-spacing:.7px;line-height:1.08;color:var(--off)">${offTeam}</div>
+  const view = buildShiftView(date);
+  const g = view.groupToWork;
+
+  const badge = hol ? `<span class="badge holiday">祝日</span>` :
+               today ? `<span class="badge today">今日</span>` :
+               `<span class="badge">${title}</span>`;
+
+  el.innerHTML = `
+    <div class="dateRow">
+      <div class="dateBig">${ymd}</div>
+      <div class="dow">${dow}</div>
+      ${badge}
+    </div>
+    <div class="shiftRow">
+      <div class="shiftBox">
+        <div class="shiftName">A班</div>
+        <div class="shiftVal">${shiftLabel[g["A"]]}</div>
       </div>
-    </div>`;
-  grid.appendChild(off);
+      <div class="shiftBox">
+        <div class="shiftName">B班</div>
+        <div class="shiftVal">${shiftLabel[g["B"]]}</div>
+      </div>
+      <div class="shiftBox">
+        <div class="shiftName">C班</div>
+        <div class="shiftVal">${shiftLabel[g["C"]]}</div>
+      </div>
+      <div class="shiftBox">
+        <div class="shiftName">D班</div>
+        <div class="shiftVal">${shiftLabel[g["D"]]}</div>
+      </div>
+    </div>
+  `;
+
+  // 日付全体の色味（祝日優先）
+  const cls = dayClass(date);
+  el.style.borderColor = "rgba(255,255,255,.08)";
+  if(cls === "holiday") el.style.borderColor = "rgba(255,176,32,.55)";
+  if(cls === "sun") el.style.borderColor = "rgba(255,90,90,.55)";
+  if(cls === "sat") el.style.borderColor = "rgba(90,169,255,.55)";
 }
 
-/* 選択処理（ダイヤル＆dateピッカー） */
-function selectDate(d,opts={}){
-  renderRight(d);
-  [...dialWheel.children].forEach(el=>{ el.classList.toggle('selected', el.getAttribute('data-date')===toISO(d)); });
-  gotoDateInp.value=toISO(d);
-  if(opts.scrollIntoView){
-    const el=[...dialWheel.children].find(x=>x.getAttribute('data-date')===toISO(d));
-    if(el){ el.scrollIntoView({inline:'center',block:'nearest',behavior:'smooth'}); }
-  }
+/* =========================
+   操作
+   ========================= */
+let current = new Date(); // 初期表示「今日」[1](https://ubeglobal-my.sharepoint.com/personal/32607u_ube_com/Documents/Whiteboards/Microsoft%20Copilot%20%E3%83%81%E3%83%A3%E3%83%83%E3%83%88%20%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB/%E3%81%84%E3%81%A1%E3%81%AB%E3%81%A1%E3%81%9A%E3%82%8C.txt)
+
+const cardMain = document.getElementById("cardMain");
+const cardNext = document.getElementById("cardNext");
+const picker = document.getElementById("picker");
+const tzNote = document.getElementById("tzNote");
+
+function syncPicker(){
+  picker.value = ymdLocal(current);
+}
+function render(){
+  renderCard(cardMain, current, "指定日");
+  renderCard(cardNext, addDaysLocal(current, 1), "翌日");
+  syncPicker();
 }
 
-/* 初期化：今日を表示 */
-function init(){
-  renderDialAround(TODAY);
-  selectDate(TODAY,{scrollIntoView:true});
+document.getElementById("todayBtn").addEventListener("click", ()=>{
+  current = new Date();
+  render();
+});
+document.getElementById("prev7").addEventListener("click", ()=>{
+  current = addDaysLocal(current, -7);
+  render();
+});
+document.getElementById("next7").addEventListener("click", ()=>{
+  current = addDaysLocal(current, +7);
+  render();
+});
+picker.addEventListener("change", ()=>{
+  if(!picker.value) return;
+  current = parseYMDLocal(picker.value);
+  render();
+});
 
-  prevWeekBtn.addEventListener('click',()=>{
-    const current=new Date(gotoDateInp.value||TODAY);
-    selectDate(addDays(current,-7),{scrollIntoView:true});
-  });
-  nextWeekBtn.addEventListener('click',()=>{
-    const current=new Date(gotoDateInp.value||TODAY);
-    selectDate(addDays(current,7),{scrollIntoView:true});
-  });
-  todayBtn.addEventListener('click',()=>selectDate(TODAY,{scrollIntoView:true}));
-  gotoDateInp.addEventListener('change',()=>{
-    const v=gotoDateInp.value; if(!v) return;
-    const d=new Date(v); d.setHours(0,0,0,0);
-    selectDate(d,{scrollIntoView:true});
-  });
-}
-init();
+// タイムゾーン表示
+(function(){
+  const offsetMin = -new Date().getTimezoneOffset();
+  const sign = offsetMin >= 0 ? "+" : "-";
+  const hh = String(Math.floor(Math.abs(offsetMin)/60)).padStart(2,"0");
+  const mm = String(Math.abs(offsetMin)%60).padStart(2,"0");
+  tzNote.textContent = `TZ: UTC${sign}${hh}:${mm}（ズレ対策：ローカル日付固定）`;
+})();
+
+render();
 </script>
 </body>
 </html>
-
-
