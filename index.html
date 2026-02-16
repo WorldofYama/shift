@@ -158,19 +158,20 @@
   <div class="top">
     <div class="title">
       <h1>4班・3勤1休ローテ（三交代）</h1>
-      <p class="sub">「何日はAが2番」みたいに一発で分かる表示（班ズレ修正＋前日/翌日追加）</p>
+      <p class="sub">祝日ズレ対策済み／地獄（休み同時多発）回避／操作は「←7日 ←1日 今日 1日→ 7日→」</p>
     </div>
   </div>
 
   <div class="bar">
     <span class="label">日付</span>
 
-    <!-- 追加：前日/翌日 -->
-    <button class="btn" id="prev1">← 1日</button>
-    <button class="btn" id="next1">1日 →</button>
-
+    <!-- 並び：←7日、←1日、今日、1日→、7日→ -->
     <button class="btn" id="prev7">← 7日</button>
+    <button class="btn" id="prev1">← 1日</button>
+
     <button class="btn primary" id="today">今日</button>
+
+    <button class="btn" id="next1">1日 →</button>
     <button class="btn" id="next7">7日 →</button>
 
     <span class="spacer"></span>
@@ -192,7 +193,11 @@
 </div>
 
 <script>
-/* ===== 祝日ズレ対策（ローカル日付固定） ===== */
+/* =========================
+   祝日ズレ対策：ローカル日付固定
+   - toISOString()は使わない
+   - "YYYY-MM-DD" を new Date("...") で作らない
+   ========================= */
 function ymdLocal(d){
   const y = d.getFullYear();
   const m = String(d.getMonth()+1).padStart(2,'0');
@@ -201,19 +206,24 @@ function ymdLocal(d){
 }
 function parseYMDLocal(s){
   const [y,m,d] = s.split('-').map(Number);
-  return new Date(y, m-1, d); // ローカル 00:00
+  return new Date(y, m-1, d); // ローカル00:00
 }
 function addDays(d, n){
   return new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
 }
 function diffDays(a,b){
+  // 日付境界の罠回避：正午固定
   const A = new Date(a.getFullYear(), a.getMonth(), a.getDate(), 12);
   const B = new Date(b.getFullYear(), b.getMonth(), b.getDate(), 12);
   return Math.round((A - B) / 86400000);
 }
+function mod(n, m){ return ((n % m) + m) % m; }
 
-/* ===== 祝日（必要なら増やす。重複してもSetで競合しない） ===== */
+/* =========================
+   祝日（ここを差し替え）
+   ========================= */
 const HOLIDAYS = [
+  // 例（必要に応じて追加）
   "2026-02-11",
   "2026-02-23",
   "2026-03-20"
@@ -221,20 +231,26 @@ const HOLIDAYS = [
 const holidaySet = new Set(HOLIDAYS);
 function isHoliday(d){ return holidaySet.has(ymdLocal(d)); }
 
-/* ===== ローテ：班ズレ修正（ここが前回の間違いを直した本体） =====
-   例の12日サイクル：1,1,1,休,3,3,3,休,2,2,2,休 [1](https://ubeglobal-my.sharepoint.com/personal/32607u_ube_com/Documents/Whiteboards/Microsoft%20Copilot%20%E3%83%81%E3%83%A3%E3%83%83%E3%83%88%20%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB/%E3%81%84%E3%81%A1%E3%81%AB%E3%81%A1%E3%81%9A%E3%82%8C.txt)
+/* =========================
+   ローテ仕様（あなたの仕様に準拠）[1](https://ubeglobal-my.sharepoint.com/personal/32607u_ube_com/Documents/Whiteboards/Microsoft%20Copilot%20%E3%83%81%E3%83%A3%E3%83%83%E3%83%88%20%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB/%E3%81%84%E3%81%A1%E3%81%AB%E3%81%A1%E3%81%9A%E3%82%8C.txt)
+   サイクル：1,1,1,休,3,3,3,休,2,2,2,休
    基準日：2026-02-02
-   基準日の割当：1番=B, 2番=A, 3番=D, 休=C [1](https://ubeglobal-my.sharepoint.com/personal/32607u_ube_com/Documents/Whiteboards/Microsoft%20Copilot%20%E3%83%81%E3%83%A3%E3%83%83%E3%83%88%20%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB/%E3%81%84%E3%81%A1%E3%81%AB%E3%81%A1%E3%81%9A%E3%82%8C.txt)
-*/
+   基準日の割当：1番=B、2番=A、3番=D、休=C
+   ========================= */
 const baseDate = parseYMDLocal("2026-02-02"); // [1](https://ubeglobal-my.sharepoint.com/personal/32607u_ube_com/Documents/Whiteboards/Microsoft%20Copilot%20%E3%83%81%E3%83%A3%E3%83%83%E3%83%88%20%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB/%E3%81%84%E3%81%A1%E3%81%AB%E3%81%A1%E3%81%9A%E3%82%8C.txt)
 const cycle = ["1","1","1","休","3","3","3","休","2","2","2","休"]; // [1](https://ubeglobal-my.sharepoint.com/personal/32607u_ube_com/Documents/Whiteboards/Microsoft%20Copilot%20%E3%83%81%E3%83%A3%E3%83%83%E3%83%88%20%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB/%E3%81%84%E3%81%A1%E3%81%AB%E3%81%A1%E3%81%9A%E3%82%8C.txt)
 
+/* ★重要：地獄回避の開始インデックス
+   - 休（index 3,7,11）は 3 mod 4 に現れる
+   - 開始位置の mod 4 が全班で被ると休みが同時多発する
+   - ここは UI と関係ないので「ここだけ」がロジック要所
+*/
 const baseIndexByGroup = {
-  "B": 0, // 基準日で1番 → サイクル先頭
-  "D": 4, // 基準日で3番 → "3"ブロック先頭
-  "A": 8, // 基準日で2番 → "2"ブロック先頭
-  "C": 3  // 基準日で休 → 最初の休
-}; // [1](https://ubeglobal-my.sharepoint.com/personal/32607u_ube_com/Documents/Whiteboards/Microsoft%20Copilot%20%E3%83%81%E3%83%A3%E3%83%83%E3%83%88%20%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB/%E3%81%84%E3%81%A1%E3%81%AB%E3%81%A1%E3%81%9A%E3%82%8C.txt)
+  "B": 0,  // 1番
+  "A": 9,  // 2番（mod1）
+  "D": 6,  // 3番（mod2）
+  "C": 3   // 休  （mod3）
+};
 
 const timeByShift = {
   "1":"08:00–16:00",
@@ -242,8 +258,6 @@ const timeByShift = {
   "3":"23:00–08:00",
   "休":"（休み）"
 };
-
-function mod(n, m){ return ((n % m) + m) % m; }
 
 function groupToShiftAt(date){
   const dd = diffDays(date, baseDate);
@@ -255,9 +269,11 @@ function groupToShiftAt(date){
   return g2s;
 }
 
-/* ===== UI ===== */
+/* =========================
+   UI
+   ========================= */
 const dowJP = ["日","月","火","水","木","金","土"];
-let current = new Date(); // [1](https://ubeglobal-my.sharepoint.com/personal/32607u_ube_com/Documents/Whiteboards/Microsoft%20Copilot%20%E3%83%81%E3%83%A3%E3%83%83%E3%83%88%20%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB/%E3%81%84%E3%81%A1%E3%81%AB%E3%81%A1%E3%81%9A%E3%82%8C.txt)
+let current = new Date(); // 初期表示「今日」[1](https://ubeglobal-my.sharepoint.com/personal/32607u_ube_com/Documents/Whiteboards/Microsoft%20Copilot%20%E3%83%81%E3%83%A3%E3%83%83%E3%83%88%20%E3%83%95%E3%82%A1%E3%82%A4%E3%83%AB/%E3%81%84%E3%81%A1%E3%81%AB%E3%81%A1%E3%81%9A%E3%82%8C.txt)
 
 const picker  = document.getElementById("picker");
 const hero    = document.getElementById("hero");
@@ -337,7 +353,7 @@ function render(){
   }).join("");
 }
 
-/* 操作 */
+/* 操作（並びのIDに合わせて） */
 document.getElementById("today").onclick = ()=>{ current = new Date(); render(); };
 document.getElementById("prev1").onclick = ()=>{ current = addDays(current, -1); render(); };
 document.getElementById("next1").onclick = ()=>{ current = addDays(current, +1); render(); };
